@@ -53,11 +53,38 @@ int main(int argc, char *argv[])
     AvRecorder recorder;
     recorder.show();
 
+    QObject::connect(&recorder, SIGNAL(outputDirectory(const QString&)), &camera,
+            SLOT(setOutputDirectory(const QString&)));
+
+    QObject::connect(&recorder, SIGNAL(stateChanged(QMediaRecorder::State)), &camera,
+            SLOT(onStateChanged(QMediaRecorder::State)));
+
+    QObject::connect(&recorder, SIGNAL(cameraOutput(QString)), &camera,
+            SLOT(setCameraOutput(QString)));
+
+    QObject::connect(&recorder, SIGNAL(cameraFramerate(QString)), &camera,
+            SLOT(setCameraFramerate(QString)));
+
     QObject::connect(&camera, SIGNAL(cameraInfo(int,int,int,int)), &recorder,
             SLOT(processCameraInfo(int, int, int, int)));
 
     QObject::connect(&camera, SIGNAL(qimgReady(int, const QImage)), &recorder,
             SLOT(processQImage(int, const QImage)));
 
-    return app.exec();
+    QObject::connect(&camera, SIGNAL(errorMessage(const QString&)), &recorder,
+            SLOT(displayErrorMessage(const QString&)));
+
+    const int retval = app.exec();
+
+    if (camera.isRunning()){
+        camera.breakLoop();
+        camera.quit();
+        if (!camera.wait(5000)) {
+            camera.terminate();
+            if (!camera.wait(5000))
+                qDebug() << "Failed to terminate!";
+        }
+    }
+
+    return retval;
 }

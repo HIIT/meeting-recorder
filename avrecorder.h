@@ -62,15 +62,25 @@ public:
     AvRecorder(QWidget *parent = 0);
     ~AvRecorder();
 
+signals:
+    void outputDirectory(const QString&);
+    void stateChanged(QMediaRecorder::State);
+    void cameraOutput(QString);
+    void cameraFramerate(QString);
+
 public slots:
     void processBuffer(const QAudioBuffer&);
     void processQImage(int n, const QImage qimg);
     void processCameraInfo(int, int, int, int);
+    void displayErrorMessage(const QString&);
 
 private slots:
     void setOutputLocation();
     void togglePause();
     void toggleRecord();
+
+    void setCameraOutput(QString);
+    void setCameraFramerate(QString);
 
     void updateStatus(QMediaRecorder::Status);
     void onStateChanged(QMediaRecorder::State);
@@ -87,6 +97,7 @@ private:
     QList<QAudioLevel*> audioLevels;
     bool outputLocationSet;
 
+    QString dirName;
 };
 
 #endif // AVRECORDER_H

@@ -111,6 +111,21 @@ AvRecorder::AvRecorder(QWidget *parent) :
     ui->bitrateBox->addItem(QStringLiteral("96000"), QVariant(96000));
     ui->bitrateBox->addItem(QStringLiteral("128000"), QVariant(128000));
 
+    //camera output sizes:
+    ui->cameraOutBox->addItem("Original");
+    ui->cameraOutBox->addItem("960x540");
+    ui->cameraOutBox->addItem("768x432");
+    ui->cameraOutBox->addItem("640x360");
+    ui->cameraOutBox->addItem("480x270");
+
+    //camera framerates:
+    ui->frameRateBox->addItem("30");
+    ui->frameRateBox->addItem("25");
+    ui->frameRateBox->addItem("15");
+    ui->frameRateBox->addItem("10");
+    ui->frameRateBox->addItem("5");
+    ui->frameRateBox->setCurrentIndex(2);
+
     connect(audioRecorder, SIGNAL(durationChanged(qint64)), this,
             SLOT(updateProgress(qint64)));
     connect(audioRecorder, SIGNAL(statusChanged(QMediaRecorder::Status)), this,
@@ -119,6 +134,8 @@ AvRecorder::AvRecorder(QWidget *parent) :
             this, SLOT(onStateChanged(QMediaRecorder::State)));
     connect(audioRecorder, SIGNAL(error(QMediaRecorder::Error)), this,
             SLOT(displayErrorMessage()));
+
+    dirName = "";
 }
 
 AvRecorder::~AvRecorder()
@@ -132,7 +149,15 @@ void AvRecorder::updateProgress(qint64 duration)
     if (audioRecorder->error() != QMediaRecorder::NoError || duration < 2000)
         return;
 
-    ui->statusbar->showMessage(tr("Recorded %1 sec").arg(duration / 1000));
+    QFileInfo wavFile(dirName+"/audio.wav");
+    QFileInfo ca1File(dirName+"/captureone.avi");
+    QFileInfo ca2File(dirName+"/capturetwo.avi");
+
+    ui->statusbar->showMessage(tr("Recorded %1 sec, audio %2 MB, camera 0: %3 MB, camera 1: %4 MB")
+                               .arg(duration / 1000)
+                               .arg(wavFile.size()/1024/1024)
+                               .arg(ca1File.size()/1024/1024)
+                               .arg(ca2File.size()/1024/1024));
 }
 
 void AvRecorder::updateStatus(QMediaRecorder::Status status)
@@ -141,7 +166,7 @@ void AvRecorder::updateStatus(QMediaRecorder::Status status)
 
     switch (status) {
     case QMediaRecorder::RecordingStatus:
-        statusMessage = tr("Recording to %1").arg(audioRecorder->actualLocation().toString());
+        statusMessage = tr("Starting to record");
         break;
     case QMediaRecorder::PausedStatus:
         clearAudioLevels();
@@ -177,6 +202,8 @@ void AvRecorder::onStateChanged(QMediaRecorder::State state)
     }
 
     ui->pauseButton->setEnabled(audioRecorder->state() != QMediaRecorder::StoppedState);
+
+    emit stateChanged(state);
 }
 
 static QVariant boxValue(const QComboBox *box)
@@ -190,6 +217,9 @@ static QVariant boxValue(const QComboBox *box)
 
 void AvRecorder::toggleRecord()
 {
+    if (!outputLocationSet)
+        setOutputLocation();
+
     if (audioRecorder->state() == QMediaRecorder::StoppedState) {
         audioRecorder->setAudioInput(boxValue(ui->audioDeviceBox).toString());
 
@@ -223,14 +253,21 @@ void AvRecorder::togglePause()
 
 void AvRecorder::setOutputLocation()
 {
-    QString fileName = QFileDialog::getSaveFileName();
-    audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
+    dirName = QFileDialog::getExistingDirectory(this, "", "",
+                                                QFileDialog::ShowDirsOnly);
+    ui->statusbar->showMessage("Output directory: "+dirName);
+    audioRecorder->setOutputLocation(dirName+"/audio.wav");
+    emit outputDirectory(dirName);
+    //audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
     outputLocationSet = true;
 }
 
-void AvRecorder::displayErrorMessage()
-{
+void AvRecorder::displayErrorMessage() {
     ui->statusbar->showMessage(audioRecorder->errorString());
+}
+
+void AvRecorder::displayErrorMessage(const QString &e) {
+    ui->statusbar->showMessage(e);
 }
 
 void AvRecorder::clearAudioLevels()
@@ -376,9 +413,18 @@ void AvRecorder::processQImage(int n, const QImage qimg)
 
 void AvRecorder::processCameraInfo(int w1, int h1, int w2, int h2)
 {
-    qDebug() << "processCameraInfo(): w1=" << w1 << "h1=" << h1
-             << "w2=" << w2 << "h2=" << h2;
+    //qDebug() << "processCameraInfo(): w1=" << w1 << "h1=" << h1
+    //         << "w2=" << w2 << "h2=" << h2;
     ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w1).arg(h1));
     ui->camera_label_1->setText(QString("Camera 1: %1x%2").arg(w2).arg(h2));
 
+}
+
+void AvRecorder::setCameraOutput(QString wxh) {
+    //qDebug() << "setCameraOutput(): idx=" << idx;
+    emit cameraOutput(wxh);
+}
+
+void AvRecorder::setCameraFramerate(QString fps) {
+    emit cameraFramerate(fps);
 }
