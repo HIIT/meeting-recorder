@@ -150,8 +150,8 @@ void AvRecorder::updateProgress(qint64 duration)
         return;
 
     QFileInfo wavFile(dirName+"/audio.wav");
-    QFileInfo ca1File(dirName+"/captureone.avi");
-    QFileInfo ca2File(dirName+"/capturetwo.avi");
+    QFileInfo ca1File(dirName+"/capture0.avi");
+    QFileInfo ca2File(dirName+"/capture1.avi");
 
     ui->statusbar->showMessage(tr("Recorded %1 sec, audio %2 MB, camera 0: %3 MB, camera 1: %4 MB")
                                .arg(duration / 1000)
@@ -411,13 +411,12 @@ void AvRecorder::processQImage(int n, const QImage qimg)
     }
 }
 
-void AvRecorder::processCameraInfo(int w1, int h1, int w2, int h2)
+void AvRecorder::processCameraInfo(int n, int h, int w)
 {
-    //qDebug() << "processCameraInfo(): w1=" << w1 << "h1=" << h1
-    //         << "w2=" << w2 << "h2=" << h2;
-    ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w1).arg(h1));
-    ui->camera_label_1->setText(QString("Camera 1: %1x%2").arg(w2).arg(h2));
-
+    if (n==0)
+        ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w).arg(h));
+    else if (n==1)
+        ui->camera_label_1->setText(QString("Camera 1: %1x%2").arg(w).arg(h));
 }
 
 void AvRecorder::setCameraOutput(QString wxh) {

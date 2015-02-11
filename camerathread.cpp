@@ -7,6 +7,10 @@
 using namespace boost::posix_time;
 using namespace cv;
 
+CameraThread::CameraThread(int i) : idx(i)
+{
+}
+
 void CameraThread::run() Q_DECL_OVERRIDE {
     QString result;
 
@@ -15,34 +19,33 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     int delayFound = 0;
 
     // initialize capture on default source
-    VideoCapture capture_one(0);
-    VideoCapture capture_two(1);
-    if (!capture_one.isOpened() || !capture_two.isOpened()) {
-      emit errorMessage(QString("ERROR: Failed to initialize cameras. "
-                                "Status 0: %1, 1: %2").arg(capture_one.isOpened()).arg(capture_two.isOpened()));
+    VideoCapture capture(idx);
+    if (!capture.isOpened()) {
+      emit errorMessage(QString("ERROR: Failed to initialize camera %1. ")
+                                .arg(idx));
       return;
     }
 
-    // set framerate to record and capture at
     framerate = 15;
+    fourcc = CV_FOURCC('m','p','4','v');
+
+    //capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+    //capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 
     // Get the properties from the camera
-    width_one  = capture_one.get(CV_CAP_PROP_FRAME_WIDTH);
-    height_one = capture_one.get(CV_CAP_PROP_FRAME_HEIGHT);
-    width_two  = capture_two.get(CV_CAP_PROP_FRAME_WIDTH);
-    height_two = capture_two.get(CV_CAP_PROP_FRAME_HEIGHT);
+    input_size.width =  capture.get(CV_CAP_PROP_FRAME_WIDTH);
+    input_size.height = capture.get(CV_CAP_PROP_FRAME_HEIGHT);
 
     // print camera frame size
-    qDebug() << "Camera properties";
-    qDebug() << "width = " << width_one << endl <<"height = "<< height_one;
-    qDebug() << "width = " << width_two << endl <<"height = "<< height_two;
-    emit cameraInfo(width_one, height_one, width_two, height_two);
+    qDebug() << "Camera" << idx
+             << ": width =" << input_size.width <<"height ="<< input_size.height;
+    emit cameraInfo(idx, input_size.width, input_size.height);
 
     outdir = "";
+    filename = QString("capture%1.avi").arg(idx);
 
     record_video = false;
-    width_out = 0;
-    height_out = 0;
+    output_size = Size(0,0);
 
     // initialize initial timestamps
     nextFrameTimestamp = microsec_clock::local_time();
@@ -65,33 +68,24 @@ void CameraThread::run() Q_DECL_OVERRIDE {
         //	 determine time at start of write
         initialLoopTimestamp = microsec_clock::local_time();
 
-        Mat frame_one, frame_two;
+        Mat frame;
 
-        capture_one >> frame_one;
-        capture_two >> frame_two;
+        capture >> frame;
 
-        if (width_out != 0) {
-            resize(frame_one, frame_one, Size(width_out, height_out));
-            resize(frame_two, frame_two, Size(width_out, height_out));
+        if (output_size.width != 0) {
+            resize(frame, frame, output_size);
         }
 
         // Save frame to video
         if (record_video) {
-            if (video_one.isOpened())
-                video_one << frame_one;
-            if (video_two.isOpened())
-                video_two << frame_two;
+            if (video.isOpened())
+                video << frame;
         }
 
-        Mat window_one;
-        resize(frame_one, window_one, Size(240,135));
-        QImage qimg_one = Mat2QImage(window_one);
-        emit qimgReady(0, qimg_one);
-
-        Mat window_two;
-        resize(frame_two, window_two, Size(240,135));
-        QImage qimg_two = Mat2QImage(window_two);
-        emit qimgReady(1, qimg_two);
+        Mat window;
+        resize(frame, window, Size(240,135));
+        QImage qimg = Mat2QImage(window);
+        emit qimgReady(idx, qimg);
 
         //write previous and current frame timestamp to console
         //qDebug() << nextFrameTimestamp << " " << currentFrameTimestamp << " ";
@@ -122,17 +116,12 @@ void CameraThread::setOutputDirectory(const QString &d) {
 void CameraThread::onStateChanged(QMediaRecorder::State state) {
     switch (state) {
     case QMediaRecorder::RecordingState:
-        if (!video_one.isOpened())
-            video_one.open(outdir.toStdString()+"captureone.avi", CV_FOURCC('m','p','4','v'), framerate,
-                           cvSize((width_out?width_out:(int)width_one),
-                                  (height_out?height_out:(int)height_one)));
-        if (!video_two.isOpened())
-            video_two.open(outdir.toStdString()+"capturetwo.avi", CV_FOURCC('m','p','4','v'), framerate,
-                           cvSize((width_out?width_out:(int)width_two),
-                                  (height_out?height_out:(int)height_two)));
-        if (!video_one.isOpened() || !video_two.isOpened()) {
-            emit errorMessage(QString("ERROR: Failed to initialize recording. "
-                                      "Status 0: %1, 1: %2").arg(video_one.isOpened()).arg(video_two.isOpened()));
+        if (!video.isOpened())
+            video.open(QString(outdir+filename).toStdString(), fourcc, framerate,
+                       (output_size.width ? output_size : input_size));
+        if (!video.isOpened()) {
+            emit errorMessage(QString("ERROR: Failed to initialize recording for camera %1")
+                                      .arg(idx));
         } else {
             record_video = true;
         }
@@ -142,8 +131,7 @@ void CameraThread::onStateChanged(QMediaRecorder::State state) {
         break;
     case QMediaRecorder::StoppedState:
         record_video = false;
-        video_one.release();
-        video_two.release();
+        video.release();
         break;
     }
 }
@@ -160,13 +148,11 @@ QImage CameraThread::Mat2QImage(cv::Mat const& src) {
 void CameraThread::setCameraOutput(QString wxh) {
     qDebug() << "CameraThread::setCameraOutput(): " << wxh;
     if (wxh == "Original") {
-        width_out  = 0;
-        height_out = 0;
+        output_size = Size(0,0);
     } else {
         QStringList wh = wxh.split("x");
         if (wh.length()==2) {
-            width_out  = wh.at(0).toInt();
-            height_out = wh.at(1).toInt();
+            output_size = Size(wh.at(0).toInt(), wh.at(1).toInt());
         }
     }
 }

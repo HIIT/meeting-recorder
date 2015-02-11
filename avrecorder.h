@@ -71,7 +71,7 @@ signals:
 public slots:
     void processBuffer(const QAudioBuffer&);
     void processQImage(int n, const QImage qimg);
-    void processCameraInfo(int, int, int, int);
+    void processCameraInfo(int, int, int);
     void displayErrorMessage(const QString&);
 
 private slots:

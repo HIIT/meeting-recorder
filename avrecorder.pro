@@ -1,6 +1,8 @@
 TEMPLATE = app
 TARGET = avrecorder
 
+ICON = avrecorder.icns
+
 INCLUDEPATH += /opt/local/include
 LIBS += /opt/local/lib/libopencv_core.dylib
 LIBS += /opt/local/lib/libopencv_highgui.dylib

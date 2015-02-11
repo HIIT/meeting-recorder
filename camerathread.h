@@ -19,7 +19,7 @@ class CameraThread : public QThread
 signals:
     void qimgReady(int n, const QImage qimg);
     void resultReady(const QString &s);
-    void cameraInfo(int, int, int, int);
+    void cameraInfo(int, int, int);
     void errorMessage(const QString &e);
 
 public slots:
@@ -29,23 +29,27 @@ public slots:
     void setCameraFramerate(QString);
 
 public:
+    CameraThread(int i);
     void breakLoop();
 
 private:
     QImage Mat2QImage(cv::Mat const& src);
 
     int framerate;
+    int fourcc;
 
-    double width_one, height_one, width_two, height_two;
+    int idx;
+
+    cv::Size input_size;
 
     bool record_video;
 
-    cv::VideoWriter video_one;
-    cv::VideoWriter video_two;
+    cv::VideoWriter video;
 
-    int width_out, height_out;
+    cv::Size output_size;
 
     QString outdir;
+    QString filename;
 
     bool stopLoop;
 
