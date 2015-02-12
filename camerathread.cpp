@@ -16,7 +16,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 
     time_duration td, td1;
     ptime nextFrameTimestamp, currentFrameTimestamp, initialLoopTimestamp, finalLoopTimestamp;
-    int delayFound = 0;
+    // int delayFound = 0;
 
     // initialize capture on default source
     VideoCapture capture(idx);
@@ -29,8 +29,14 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     framerate = 15;
     fourcc = CV_FOURCC('m','p','4','v');
 
-    //capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-    //capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+#if defined(Q_OS_LINUX)
+    QString v4l2 = QString("/usr/bin/v4l2-ctl -d /dev/video%1 -v width=1280,height=960").arg(idx);
+    int ret = system(v4l2.toStdString().c_str());
+    qDebug() << "Command [" << v4l2 << "] returned" << ret; 
+
+    capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
+#endif
 
     // Get the properties from the camera
     input_size.width =  capture.get(CV_CAP_PROP_FRAME_WIDTH);
@@ -55,8 +61,10 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     stopLoop = false;
     for(;;) {
 
-        if (stopLoop)
-            break;
+      if (stopLoop) {
+	qDebug() << "Camera" << idx << "stopping";
+	break;
+      }
 
         // wait for X microseconds until 1second/framerate time has passed after previous frame write
         while(td.total_microseconds() < 1000000/framerate){
@@ -72,20 +80,25 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 
         capture >> frame;
 
-        if (output_size.width != 0) {
+	if (frame.cols && frame.rows) {
+
+	  if (output_size.width != 0) {
             resize(frame, frame, output_size);
-        }
-
-        // Save frame to video
-        if (record_video) {
+	  }
+	  
+	  // Save frame to video
+	  if (record_video) {
             if (video.isOpened())
-                video << frame;
-        }
-
-        Mat window;
-        resize(frame, window, Size(240,135));
-        QImage qimg = Mat2QImage(window);
-        emit qimgReady(idx, qimg);
+	      video << frame;
+	  }
+	  
+	  Mat window;
+	  resize(frame, window, Size(240,135));
+	  QImage qimg = Mat2QImage(window);
+	  emit qimgReady(idx, qimg);
+	  
+	} else
+	  qDebug() << "Camera" << idx << ": Skipped frame";
 
         //write previous and current frame timestamp to console
         //qDebug() << nextFrameTimestamp << " " << currentFrameTimestamp << " ";
@@ -102,7 +115,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
         // enough to capture/decompress/record/compress that fast.
         finalLoopTimestamp = microsec_clock::local_time();
         td1 = (finalLoopTimestamp - initialLoopTimestamp);
-        delayFound = td1.total_milliseconds();
+        //delayFound = td1.total_milliseconds();
         //qDebug() << "Delay: " << delayFound;
 
     }

@@ -50,6 +50,16 @@ int main(int argc, char *argv[])
     AvRecorder recorder;
     recorder.show();
 
+#if defined(Q_OS_MAC)
+    qDebug() << "Running on OS X";
+#elif defined(Q_OS_LINUX)
+    qDebug() << "Running on Linux";
+    int res = system("/usr/bin/v4l2-ctl --list-devices");
+    qDebug() << res;
+#else
+    qDebug() << "Unknown operating system";
+#endif
+
     QList<CameraThread *> cameras;
     for (int idx=0; idx<2; idx++) {
         CameraThread* cam = new CameraThread(idx);
@@ -76,11 +86,24 @@ int main(int argc, char *argv[])
 
         QObject::connect(cam, SIGNAL(errorMessage(const QString&)), &recorder,
                 SLOT(displayErrorMessage(const QString&)));
+
     }
 
     const int retval = app.exec();
 
-    /*
+    QList<CameraThread *>::iterator i;
+    for (i = cameras.begin(); i != cameras.end(); ++i)
+      if ((*i)->isRunning()) {
+	(*i)->breakLoop();
+	(*i)->quit();
+        if (!(*i)->wait(2000)) {
+	  (*i)->terminate();
+	  if (!(*i)->wait(2000))
+	    qDebug() << "CameraThread to terminate!";
+	}
+      }
+
+  /*
     if (camera.isRunning()){
         camera.breakLoop();
         camera.quit();

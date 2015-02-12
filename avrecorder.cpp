@@ -411,7 +411,7 @@ void AvRecorder::processQImage(int n, const QImage qimg)
     }
 }
 
-void AvRecorder::processCameraInfo(int n, int h, int w)
+void AvRecorder::processCameraInfo(int n, int w, int h)
 {
     if (n==0)
         ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w).arg(h));
