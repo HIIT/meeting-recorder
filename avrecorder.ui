@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>569</width>
-    <height>452</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,8 +19,8 @@
      <rect>
       <x>12</x>
       <y>12</y>
-      <width>542</width>
-      <height>417</height>
+      <width>543</width>
+      <height>467</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
@@ -174,7 +174,7 @@
           </widget>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="levelsLayout" stretch="">
+          <layout class="QVBoxLayout" name="levelsLayout">
            <property name="sizeConstraint">
             <enum>QLayout::SetMinimumSize</enum>
            </property>
@@ -187,10 +187,13 @@
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Maximum</enum>
+         </property>
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>40</height>
+           <height>20</height>
           </size>
          </property>
         </spacer>
@@ -234,9 +237,9 @@
         <number>20</number>
        </property>
        <item>
-        <widget class="QLabel" name="camera_label_0">
+        <widget class="QCheckBox" name="camera_label_0">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -272,9 +275,9 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="camera_label_1">
+        <widget class="QCheckBox" name="camera_label_1">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
@@ -329,6 +332,16 @@
           <widget class="QComboBox" name="frameRateBox"/>
          </item>
         </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeType">
+          <enum>QSizePolicy::Maximum</enum>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
@@ -451,6 +464,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>camera_label_0</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setCamera0State(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>417</x>
+     <y>22</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>284</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>camera_label_1</sender>
+   <signal>stateChanged(int)</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setCamera1State(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>417</x>
+     <y>190</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>284</x>
+     <y>239</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>setOutputLocation()</slot>
@@ -458,5 +503,7 @@
   <slot>togglePause()</slot>
   <slot>setCameraOutput(QString)</slot>
   <slot>setCameraFramerate(QString)</slot>
+  <slot>setCamera0State(int)</slot>
+  <slot>setCamera1State(int)</slot>
  </slots>
 </ui>

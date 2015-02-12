@@ -66,27 +66,29 @@ int main(int argc, char *argv[])
         cam->start();
         cameras.append(cam);
 
-        QObject::connect(&recorder, SIGNAL(outputDirectory(const QString&)), cam,
-                SLOT(setOutputDirectory(const QString&)));
+        QObject::connect(&recorder, SIGNAL(outputDirectory(const QString&)),
+                         cam, SLOT(setOutputDirectory(const QString&)));
 
-        QObject::connect(&recorder, SIGNAL(stateChanged(QMediaRecorder::State)), cam,
-                SLOT(onStateChanged(QMediaRecorder::State)));
+        QObject::connect(&recorder, SIGNAL(stateChanged(QMediaRecorder::State)),
+                         cam, SLOT(onStateChanged(QMediaRecorder::State)));
 
-        QObject::connect(&recorder, SIGNAL(cameraOutput(QString)), cam,
-                SLOT(setCameraOutput(QString)));
+        QObject::connect(&recorder, SIGNAL(cameraOutput(QString)),
+                         cam, SLOT(setCameraOutput(QString)));
 
-        QObject::connect(&recorder, SIGNAL(cameraFramerate(QString)), cam,
-                SLOT(setCameraFramerate(QString)));
+        QObject::connect(&recorder, SIGNAL(cameraFramerate(QString)),
+                         cam, SLOT(setCameraFramerate(QString)));
 
-        QObject::connect(cam, SIGNAL(cameraInfo(int,int,int)), &recorder,
-                SLOT(processCameraInfo(int, int, int)));
+        QObject::connect(&recorder, SIGNAL(cameraStateChanged(int, int)),
+                         cam, SLOT(setCameraState(int, int)));
 
-        QObject::connect(cam, SIGNAL(qimgReady(int, const QImage)), &recorder,
-                SLOT(processQImage(int, const QImage)));
+        QObject::connect(cam, SIGNAL(cameraInfo(int,int,int)),
+                         &recorder, SLOT(processCameraInfo(int, int, int)));
 
-        QObject::connect(cam, SIGNAL(errorMessage(const QString&)), &recorder,
-                SLOT(displayErrorMessage(const QString&)));
+        QObject::connect(cam, SIGNAL(qimgReady(int, const QImage)),
+                         &recorder, SLOT(processQImage(int, const QImage)));
 
+        QObject::connect(cam, SIGNAL(errorMessage(const QString&)),
+                         &recorder, SLOT(displayErrorMessage(const QString&)));
     }
 
     const int retval = app.exec();

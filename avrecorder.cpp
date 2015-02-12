@@ -426,10 +426,13 @@ void AvRecorder::processQImage(int n, const QImage qimg)
 
 void AvRecorder::processCameraInfo(int n, int w, int h)
 {
-    if (n==0)
+    if (n==0) {
         ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w).arg(h));
-    else if (n==1)
+        ui->camera_label_0->setChecked(true);
+    } else if (n==1) {
         ui->camera_label_1->setText(QString("Camera 1: %1x%2").arg(w).arg(h));
+        ui->camera_label_1->setChecked(true);
+    }
 }
 
 void AvRecorder::setCameraOutput(QString wxh) {
@@ -439,4 +442,14 @@ void AvRecorder::setCameraOutput(QString wxh) {
 
 void AvRecorder::setCameraFramerate(QString fps) {
     emit cameraFramerate(fps);
+}
+
+void AvRecorder::setCamera0State(int state) {
+    qDebug() << "setCamera0State(): state=" << state;
+    emit cameraStateChanged(0, state);
+}
+
+void AvRecorder::setCamera1State(int state) {
+    qDebug() << "setCamera0State(): state=" << state;
+    emit cameraStateChanged(1, state);
 }

@@ -68,6 +68,7 @@ signals:
     void stateChanged(QMediaRecorder::State);
     void cameraOutput(QString);
     void cameraFramerate(QString);
+    void cameraStateChanged(int, int);
 
 public slots:
     void processBuffer(const QAudioBuffer&);
@@ -82,6 +83,8 @@ private slots:
 
     void setCameraOutput(QString);
     void setCameraFramerate(QString);
+    void setCamera0State(int);
+    void setCamera1State(int);
 
     void updateStatus(QMediaRecorder::Status);
     void onStateChanged(QMediaRecorder::State);

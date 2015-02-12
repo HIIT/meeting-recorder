@@ -8,7 +8,7 @@
 using namespace boost::posix_time;
 using namespace cv;
 
-CameraThread::CameraThread(int i) : idx(i)
+CameraThread::CameraThread(int i) : idx(i), is_active(false)
 {
 }
 
@@ -60,6 +60,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     td = (currentFrameTimestamp - nextFrameTimestamp);
 
     stopLoop = false;
+    is_active = true;
     for(;;) {
 
       if (stopLoop) {
@@ -81,49 +82,52 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 
         capture >> frame;
 
-	if (frame.cols && frame.rows) {
+    if (is_active) {
+        if (frame.cols && frame.rows) {
 
-	  if (output_size.width != 0) {
-            resize(frame, frame, output_size);
-	  }
-	  
-      QDateTime datetime = QDateTime::currentDateTime();
-      rectangle(frame, Point(2,frame.rows-22), Point(300, frame.rows-8),
-          Scalar(0,0,0), CV_FILLED);
-      putText(frame, datetime.toString().toStdString().c_str(),
-            Point(10,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0, Scalar(255,255,255));
+            if (output_size.width != 0) {
+                resize(frame, frame, output_size);
+            }
 
-      // Save frame to video
-	  if (record_video) {
-            if (video.isOpened())
-	      video << frame;
-	  }
-	  
-	  Mat window;
-	  resize(frame, window, Size(240,135));
-	  QImage qimg = Mat2QImage(window);
-	  emit qimgReady(idx, qimg);
-	  
-	} else
-	  qDebug() << "Camera" << idx << ": Skipped frame";
+            QDateTime datetime = QDateTime::currentDateTime();
+            rectangle(frame, Point(2,frame.rows-22), Point(300, frame.rows-8),
+                      Scalar(0,0,0), CV_FILLED);
+            putText(frame, datetime.toString().toStdString().c_str(),
+                    Point(10,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0,
+                    Scalar(255,255,255));
 
-        //write previous and current frame timestamp to console
-        //qDebug() << nextFrameTimestamp << " " << currentFrameTimestamp << " ";
+            // Save frame to video
+            if (record_video) {
+                if (video.isOpened())
+                    video << frame;
+            }
 
-        // add 1second/framerate time for next loop pause
-        nextFrameTimestamp = nextFrameTimestamp + microsec(1000000/framerate);
+            Mat window;
+            resize(frame, window, Size(240,135));
+            QImage qimg = Mat2QImage(window);
+            emit qimgReady(idx, qimg);
 
-        // reset time_duration so while loop engages
-        td = (currentFrameTimestamp - nextFrameTimestamp);
+        } else
+            qDebug() << "Camera" << idx << ": Skipped frame";
+    }
 
-        //determine and print out delay in ms, should be less than 1000/FPS
-        //occasionally, if delay is larger than said value, correction will occur
-        //if delay is consistently larger than said value, then CPU is not powerful
-        // enough to capture/decompress/record/compress that fast.
-        finalLoopTimestamp = microsec_clock::local_time();
-        td1 = (finalLoopTimestamp - initialLoopTimestamp);
-        //delayFound = td1.total_milliseconds();
-        //qDebug() << "Delay: " << delayFound;
+    //write previous and current frame timestamp to console
+    //qDebug() << nextFrameTimestamp << " " << currentFrameTimestamp << " ";
+
+    // add 1second/framerate time for next loop pause
+    nextFrameTimestamp = nextFrameTimestamp + microsec(1000000/framerate);
+
+    // reset time_duration so while loop engages
+    td = (currentFrameTimestamp - nextFrameTimestamp);
+
+    //determine and print out delay in ms, should be less than 1000/FPS
+    //occasionally, if delay is larger than said value, correction will occur
+    //if delay is consistently larger than said value, then CPU is not powerful
+    // enough to capture/decompress/record/compress that fast.
+    finalLoopTimestamp = microsec_clock::local_time();
+    td1 = (finalLoopTimestamp - initialLoopTimestamp);
+    //delayFound = td1.total_milliseconds();
+    //qDebug() << "Delay: " << delayFound;
 
     }
 
@@ -136,9 +140,14 @@ void CameraThread::setOutputDirectory(const QString &d) {
 void CameraThread::onStateChanged(QMediaRecorder::State state) {
     switch (state) {
     case QMediaRecorder::RecordingState:
-        if (!video.isOpened())
+        if (!is_active) {
+            record_video = false;
+            break;
+        }
+        if (!video.isOpened()) {
             video.open(QString(outdir+filename).toStdString(), fourcc, framerate,
                        (output_size.width ? output_size : input_size));
+        }
         if (!video.isOpened()) {
             emit errorMessage(QString("ERROR: Failed to initialize recording for camera %1")
                                       .arg(idx));
@@ -184,4 +193,11 @@ void CameraThread::setCameraFramerate(QString fps) {
 
 void CameraThread::breakLoop() {
     stopLoop = true;
+}
+
+void CameraThread::setCameraState(int i, int state) {
+    if (i == idx) {
+        qDebug() << "Camera" << idx << "received" << state;
+        is_active = state;
+    }
 }

@@ -27,6 +27,7 @@ public slots:
     void onStateChanged(QMediaRecorder::State);
     void setCameraOutput(QString);
     void setCameraFramerate(QString);
+    void setCameraState(int, int);
 
 public:
     CameraThread(int i);
@@ -43,6 +44,8 @@ private:
     cv::Size input_size;
 
     bool record_video;
+
+    bool is_active;
 
     cv::VideoWriter video;
 
