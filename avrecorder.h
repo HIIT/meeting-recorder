@@ -44,6 +44,7 @@
 #include <QMainWindow>
 #include <QMediaRecorder>
 #include <QUrl>
+#include <QDateTime>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class AvRecorder; }
@@ -98,6 +99,9 @@ private:
     bool outputLocationSet;
 
     QString dirName;
+
+    QDateTime rec_started;
+
 };
 
 #endif // AVRECORDER_H

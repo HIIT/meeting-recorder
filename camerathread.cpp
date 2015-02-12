@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QDateTime>
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
@@ -86,7 +87,13 @@ void CameraThread::run() Q_DECL_OVERRIDE {
             resize(frame, frame, output_size);
 	  }
 	  
-	  // Save frame to video
+      QDateTime datetime = QDateTime::currentDateTime();
+      rectangle(frame, Point(2,frame.rows-22), Point(300, frame.rows-8),
+          Scalar(0,0,0), CV_FILLED);
+      putText(frame, datetime.toString().toStdString().c_str(),
+            Point(10,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0, Scalar(255,255,255));
+
+      // Save frame to video
 	  if (record_video) {
             if (video.isOpened())
 	      video << frame;

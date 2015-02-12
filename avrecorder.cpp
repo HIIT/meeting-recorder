@@ -153,7 +153,8 @@ void AvRecorder::updateProgress(qint64 duration)
     QFileInfo ca1File(dirName+"/capture0.avi");
     QFileInfo ca2File(dirName+"/capture1.avi");
 
-    ui->statusbar->showMessage(tr("Recorded %1 sec, audio %2 MB, camera 0: %3 MB, camera 1: %4 MB")
+    ui->statusbar->showMessage(tr("Rec started %1 (%2 secs), audio %3 MB, camera 0: %4 MB, camera 1: %5 MB")
+                               .arg(rec_started.toString("hh:mm:ss"))
                                .arg(duration / 1000)
                                .arg(wavFile.size()/1024/1024)
                                .arg(ca1File.size()/1024/1024)
@@ -166,7 +167,7 @@ void AvRecorder::updateStatus(QMediaRecorder::Status status)
 
     switch (status) {
     case QMediaRecorder::RecordingStatus:
-        statusMessage = tr("Starting to record");
+        statusMessage = tr("Starting to record...");
         break;
     case QMediaRecorder::PausedStatus:
         clearAudioLevels();
@@ -175,7 +176,7 @@ void AvRecorder::updateStatus(QMediaRecorder::Status status)
     case QMediaRecorder::UnloadedStatus:
     case QMediaRecorder::LoadedStatus:
         clearAudioLevels();
-        statusMessage = tr("Stopped");
+        statusMessage = tr("Recording stopped");
     default:
         break;
     }
@@ -220,6 +221,9 @@ void AvRecorder::toggleRecord()
     if (!outputLocationSet)
         setOutputLocation();
 
+    if (!outputLocationSet)
+        return;
+
     if (audioRecorder->state() == QMediaRecorder::StoppedState) {
         audioRecorder->setAudioInput(boxValue(ui->audioDeviceBox).toString());
 
@@ -237,6 +241,15 @@ void AvRecorder::toggleRecord()
 
         audioRecorder->setEncodingSettings(settings, QVideoEncoderSettings(), container);
         audioRecorder->record();
+
+        rec_started = QDateTime::currentDateTime();
+
+        QFile file(dirName+"/starttime.txt");
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&file);
+            out << rec_started.toString("yyyy-MM-dd-hh-mm-ss") << "\n";
+            file.close();
+        }
     }
     else {
         audioRecorder->stop();
