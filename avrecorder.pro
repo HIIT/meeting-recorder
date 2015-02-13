@@ -1,6 +1,8 @@
 TEMPLATE = app
 TARGET = avrecorder
 
+# CONFIG += debug
+
 ICON = avrecorder.icns
 
 message(Qt version: $$[QT_VERSION])

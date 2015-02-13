@@ -60,8 +60,20 @@ int main(int argc, char *argv[])
     qDebug() << "Unknown operating system";
 #endif
 
+    int only_one_camera = -1;
+    if (QCoreApplication::arguments().size()>1) {
+      only_one_camera = QCoreApplication::arguments().at(1).toInt();
+    }
+    qDebug() << "Args:" << QCoreApplication::arguments().size() << QCoreApplication::arguments().at(1)
+	     << only_one_camera;
+    
     QList<CameraThread *> cameras;
     for (int idx=0; idx<2; idx++) {
+      if (only_one_camera>-1 && idx != only_one_camera) {
+	qDebug() << "Camera" << idx << "disabled";
+	continue;
+      }
+      
         CameraThread* cam = new CameraThread(idx);
         cam->start();
         cameras.append(cam);
