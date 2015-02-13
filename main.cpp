@@ -63,9 +63,9 @@ int main(int argc, char *argv[])
     int only_one_camera = -1;
     if (QCoreApplication::arguments().size()>1) {
       only_one_camera = QCoreApplication::arguments().at(1).toInt();
+      qDebug() << "Args:" << QCoreApplication::arguments().size() << QCoreApplication::arguments().at(1)
+	       << only_one_camera;
     }
-    qDebug() << "Args:" << QCoreApplication::arguments().size() << QCoreApplication::arguments().at(1)
-	     << only_one_camera;
     
     QList<CameraThread *> cameras;
     for (int idx=0; idx<2; idx++) {
