@@ -31,12 +31,12 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     fourcc = CV_FOURCC('m','p','4','v');
 
 #if defined(Q_OS_LINUX)
-    QString v4l2 = QString("/usr/bin/v4l2-ctl -d /dev/video%1 -v width=1280,height=960").arg(idx);
+    QString v4l2 = QString("/usr/bin/v4l2-ctl -d /dev/video%1 -v width=1280,height=720").arg(idx);
     int ret = system(v4l2.toStdString().c_str());
     qDebug() << "Command [" << v4l2 << "] returned" << ret; 
 
     capture.set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 960);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
 #endif
 
     // Get the properties from the camera
