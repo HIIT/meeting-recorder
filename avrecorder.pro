@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET = avrecorder
 
 # CONFIG += debug
+CONFIG += release
 
 ICON = avrecorder.icns
 
