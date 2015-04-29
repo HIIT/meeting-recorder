@@ -41,6 +41,8 @@ private:
 
     int idx;
 
+    cv::Size desired_input_size;
+
     cv::Size input_size;
 
     bool record_video;
