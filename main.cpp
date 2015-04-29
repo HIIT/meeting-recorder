@@ -54,16 +54,20 @@ int main(int argc, char *argv[])
     qDebug() << "Running on OS X";
 #elif defined(Q_OS_LINUX)
     qDebug() << "Running on Linux";
+    qDebug() << "Querying for v4l2 devices:";
     int res = system("/usr/bin/v4l2-ctl --list-devices");
-    qDebug() << res;
+    if (res)
+      qWarning() << "WARNING: /usr/bin/v4l2-ctl not found or failed. "
+		 << "This may cause problems";
 #else
-    qDebug() << "Unknown operating system";
+    qWarning() << "Unknown operating system";
 #endif
 
     int only_one_camera = -1;
     if (QCoreApplication::arguments().size()>1) {
       only_one_camera = QCoreApplication::arguments().at(1).toInt();
-      qDebug() << "Args:" << QCoreApplication::arguments().size() << QCoreApplication::arguments().at(1)
+      qDebug() << "Args:" << QCoreApplication::arguments().size()
+	       << QCoreApplication::arguments().at(1)
 	       << only_one_camera;
     }
     
