@@ -31,10 +31,14 @@ public slots:
 
 public:
     CameraThread(int i);
+    CameraThread(int i, QString wxh);
+
     void breakLoop();
 
 private:
     QImage Mat2QImage(cv::Mat const& src);
+
+    void setDefaultDesiredInputSize();
 
     int framerate;
     int fourcc;

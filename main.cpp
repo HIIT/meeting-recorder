@@ -42,6 +42,19 @@
 #include "camerathread.h"
 
 #include <QtWidgets>
+#include <QTextStream>
+
+// ---------------------------------------------------------------------
+
+void help(const QString& cmd) {
+  QTextStream cout(stdout);
+  cout << "USAGE: " << cmd << " [0:videosize] [1:videosize]" << endl
+       << endl
+       << "  supported videosizes: WxH, fullhd, 1080p, hd, 720p" << endl
+       << endl;
+}
+
+// ---------------------------------------------------------------------
 
 int main(int argc, char *argv[])
 {
@@ -63,22 +76,64 @@ int main(int argc, char *argv[])
     qWarning() << "Unknown operating system";
 #endif
 
-    int only_one_camera = -1;
-    if (QCoreApplication::arguments().size()>1) {
-      only_one_camera = QCoreApplication::arguments().at(1).toInt();
-      qDebug() << "Args:" << QCoreApplication::arguments().size()
-	       << QCoreApplication::arguments().at(1)
-	       << only_one_camera;
+    QStringList args = QCoreApplication::arguments();
+    QBitArray use_cameras(2);
+    QMap<int, QString> wxhs;
+    QMap<QString, QString> resolutions;
+    resolutions.insert("fullhd", "1920x1080");
+    resolutions.insert("1080p", "1920x1080");
+    resolutions.insert("hd", "1280x720");
+    resolutions.insert("720p", "1280x720");
+
+    if (args.size()>1)
+      use_cameras.fill(false);
+    else
+      use_cameras.fill(true);
+
+    for (int i = 1; i < args.size(); ++i) {
+      bool ok = true;
+      int c = -1;
+
+      if (args.at(i) == "-h" || args.at(i) == "--help") {
+	help(args.at(0));
+	return 0;
+      } else if (args.at(i).contains(':')) {
+	QStringList parts = args.at(i).split(':');
+	c = parts.at(0).toInt(&ok);
+	if (ok)
+	  wxhs.insert(c, parts.at(1));
+      } else {
+	c = args.at(i).toInt(&ok);
+      }
+
+      if (ok)
+	use_cameras[c] = true;
+      else
+	qWarning() << "WARNING: Failed to parse" << args.at(i);
     }
+
+    qDebug() << args.size()
+	     << use_cameras.at(0)
+	     << use_cameras.at(1);
     
     QList<CameraThread *> cameras;
     for (int idx=0; idx<2; idx++) {
-      if (only_one_camera>-1 && idx != only_one_camera) {
+      if (!use_cameras.at(idx)) {
 	qDebug() << "Camera" << idx << "disabled";
 	continue;
       }
       
-        CameraThread* cam = new CameraThread(idx);
+      CameraThread* cam;
+      if (wxhs.contains(idx)) {
+	QString val = wxhs.value(idx);
+	if (resolutions.contains(val))
+	  cam = new CameraThread(idx, resolutions.value(val));
+	else
+	  cam = new CameraThread(idx, val);
+      } else {
+	cam = new CameraThread(idx);
+      }
+
         cam->start();
         cameras.append(cam);
 
@@ -135,3 +190,5 @@ int main(int argc, char *argv[])
 
     return retval;
 }
+
+// ---------------------------------------------------------------------
