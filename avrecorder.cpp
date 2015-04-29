@@ -247,7 +247,7 @@ void AvRecorder::toggleRecord()
         QFile file(dirName+"/starttime.txt");
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             QTextStream out(&file);
-            out << rec_started.toString("yyyy-MM-dd-hh-mm-ss") << "\n";
+            out << rec_started.toString("yyyy-MM-dd'T'hh:mm:sst") << "\n";
             file.close();
         }
     }
