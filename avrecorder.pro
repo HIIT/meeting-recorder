@@ -1,13 +1,19 @@
 TEMPLATE = app
 TARGET = avrecorder
 
-# CONFIG += debug
-CONFIG += release
+# Choose one of the following:
+CONFIG += debug
+# CONFIG += release
+
+CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
+CONFIG(release, debug|release):message(Release build)
+CONFIG(debug, debug|release):message(Debug build)
 
 ICON = avrecorder.icns
 
-message(Qt version: $$[QT_VERSION])
+message(Qt version: $$[QT_VERSION] (>= 5.4 recommended))
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
+message(Qt is installed in $$[CONFIG])
 
 macx {
      message(Platform: Mac OS X)
