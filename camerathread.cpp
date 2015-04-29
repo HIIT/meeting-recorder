@@ -145,13 +145,17 @@ void CameraThread::onStateChanged(QMediaRecorder::State state) {
             break;
         }
         if (!video.isOpened()) {
-            video.open(QString(outdir+filename).toStdString(), fourcc, framerate,
+	    qDebug() << QString("CameraThread::onStateChanged(): initializing "
+				"VideoWriter for camera %1").arg(idx);
+	    video.open(QString(outdir+filename).toStdString(), fourcc, framerate,
                        (output_size.width ? output_size : input_size));
         }
         if (!video.isOpened()) {
             emit errorMessage(QString("ERROR: Failed to initialize recording for camera %1")
                                       .arg(idx));
         } else {
+	    qDebug() << QString("CameraThread::onStateChanged(): initialization "
+				"ready for camera %1").arg(idx);
             record_video = true;
         }
         break;
