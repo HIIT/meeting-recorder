@@ -51,6 +51,8 @@ void help(const QString& cmd) {
   cout << "USAGE: " << cmd << " [0:videosize] [1:videosize]" << endl
        << endl
        << "  supported videosizes: WxH, fullhd, 1080p, hd, 720p" << endl
+       << "  (currently only for Linux; OS X uses max camera resolution)"
+       << endl
        << endl;
 }
 
