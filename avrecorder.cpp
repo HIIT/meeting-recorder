@@ -135,6 +135,7 @@ AvRecorder::AvRecorder(QWidget *parent) :
     connect(audioRecorder, SIGNAL(error(QMediaRecorder::Error)), this,
             SLOT(displayErrorMessage()));
 
+    defaultDir = QDir::homePath() + "/Meetings";
     dirName = "";
 }
 
@@ -266,7 +267,17 @@ void AvRecorder::togglePause()
 
 void AvRecorder::setOutputLocation()
 {
-    dirName = QFileDialog::getExistingDirectory(this, "", "",
+    QDir dir(defaultDir);
+    if (!dir.exists()) {
+	qDebug() << "Creating directory" << defaultDir;
+	    if (!dir.mkpath(".")) {
+		qWarning() << "WARNING: Failed to create directory" << defaultDir;
+		defaultDir = QDir::homePath();
+	    }
+    }
+
+    dirName = QFileDialog::getExistingDirectory(this, "Select or create a meeting",
+						defaultDir,
                                                 QFileDialog::ShowDirsOnly);
     ui->statusbar->showMessage("Output directory: "+dirName);
     audioRecorder->setOutputLocation(dirName+"/audio.wav");
@@ -453,3 +464,7 @@ void AvRecorder::setCamera1State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
     emit cameraStateChanged(1, state);
 }
+
+// Local Variables:
+// c-basic-offset: 4
+// End:

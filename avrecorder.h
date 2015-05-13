@@ -101,6 +101,7 @@ private:
     QList<QAudioLevel*> audioLevels;
     bool outputLocationSet;
 
+    QString defaultDir;
     QString dirName;
 
     QDateTime rec_started;
