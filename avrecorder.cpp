@@ -43,6 +43,7 @@
 #include <QDir>
 #include <QFileDialog>
 #include <QMediaRecorder>
+#include <QHostInfo>
 #include <QDebug>
 
 #include "avrecorder.h"
@@ -245,11 +246,17 @@ void AvRecorder::toggleRecord()
 
         rec_started = QDateTime::currentDateTime();
 
-        QFile file(dirName+"/starttime.txt");
-        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            QTextStream out(&file);
+        QFile timefile(dirName+"/starttime.txt");
+        if (timefile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&timefile);
             out << rec_started.toString("yyyy-MM-dd'T'hh:mm:sst") << "\n";
-            file.close();
+            timefile.close();
+        }
+        QFile hostfile(dirName+"/hostname.txt");
+        if (hostfile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream out(&hostfile);
+            out << QHostInfo::localHostName() << "\n";
+            hostfile.close();
         }
     }
     else {
