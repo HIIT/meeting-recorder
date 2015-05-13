@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = avrecorder
+TARGET = mrecorder
 
 # Choose one of the following:
 CONFIG += debug
@@ -9,39 +9,34 @@ CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 CONFIG(release, debug|release):message(Release build)
 CONFIG(debug, debug|release):message(Debug build)
 
-ICON = avrecorder.icns
+ICON = mrecorder.icns
 
 message(Qt version: $$[QT_VERSION] (>= 5.4 recommended))
 message(Qt is installed in $$[QT_INSTALL_PREFIX])
-message(Qt is installed in $$[CONFIG])
 
 macx {
      message(Platform: Mac OS X)
-     INCLUDEPATH += /opt/local/include
-     LIBS += /opt/local/lib/libopencv_core.dylib
-     LIBS += /opt/local/lib/libopencv_highgui.dylib
-     LIBS += /opt/local/lib/libopencv_imgproc.dylib
+     OPENCVDIR = /opt/local
 
-     #LIBS += /opt/local/lib/libopencv_nonfree.dylib
-     #LIBS +=	/opt/local/lib/libopencv_objdetect.dylib
-     #LIBS +=	/opt/local/lib/libopencv_flann.dylib
-     #LIBS +=	/opt/local/lib/libopencv_features2d.dylib
-     #LIBS +=	/opt/local/lib/libopencv_calib3d.dylib
-     #LIBS +=	/opt/local/lib/libopencv_video.dylib
-     #LIBS +=	/opt/local/lib/libz.dylib
+     INCLUDEPATH += $$OPENCVDIR/include
+     LIBS += $$OPENCVDIR/lib/libopencv_core.dylib
+     LIBS += $$OPENCVDIR/lib/libopencv_highgui.dylib
+     LIBS += $$OPENCVDIR/lib/libopencv_imgproc.dylib
 }
 
 linux-g++* {
      message(Platform: Linux)
-     INCLUDEPATH += /home/jmakoske/src/opencv249/include
-     LIBS += /home/jmakoske/src/opencv249/lib/libopencv_core.so
-     LIBS += /home/jmakoske/src/opencv249/lib/libopencv_highgui.so
-     LIBS += /home/jmakoske/src/opencv249/lib/libopencv_imgproc.so
+     OPENCVDIR = /home/jmakoske/src/opencv249
 
+     INCLUDEPATH += $$OPENCVDIR/include
+     LIBS += $$OPENCVDIR/lib/libopencv_core.so
+     LIBS += $$OPENCVDIR/lib/libopencv_highgui.so
+     LIBS += $$OPENCVDIR/lib/libopencv_imgproc.so
 }
 
 
 QT += multimedia
+QT += widgets
 
 HEADERS = \
     avrecorder.h \
@@ -56,7 +51,7 @@ SOURCES = \
 
 FORMS += avrecorder.ui
 
-target.path = /Users/jmakoske/bin/avrecorder
-INSTALLS += target
+#target.path = /Users/jmakoske/bin/mrecorder
+#INSTALLS += target
 
-QT+=widgets
+
