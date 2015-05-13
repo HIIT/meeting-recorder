@@ -11,13 +11,19 @@ Qt version >= 5.4 is recommended.  It can be downloaded from
 
 ### OpenCV
 
-OpenCV can be installed using package managers, e.g. in Linux:
+OpenCV can be installed using package managers, e.g. in Ubuntu Linux:
 
 	sudo apt-get install opencv-dev
 
 or in OS X with MacPorts:
 
 	sudo port install opencv
+
+### v4l-utils (Linux only)
+
+Ubuntu:
+
+	sudo apt-get install v4l-utils
 
 ## Compiling
 
