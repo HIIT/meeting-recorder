@@ -118,6 +118,7 @@ AvRecorder::AvRecorder(QWidget *parent) :
     ui->cameraOutBox->addItem("768x432");
     ui->cameraOutBox->addItem("640x360");
     ui->cameraOutBox->addItem("480x270");
+    ui->cameraOutBox->setCurrentIndex(3); // Needs to match CameraThread::output_size
 
     //camera framerates:
     ui->frameRateBox->addItem("30");
@@ -125,7 +126,7 @@ AvRecorder::AvRecorder(QWidget *parent) :
     ui->frameRateBox->addItem("15");
     ui->frameRateBox->addItem("10");
     ui->frameRateBox->addItem("5");
-    ui->frameRateBox->setCurrentIndex(2);
+    ui->frameRateBox->setCurrentIndex(2);  // Needs to match CameraThread::framerate
 
     connect(audioRecorder, SIGNAL(durationChanged(qint64)), this,
             SLOT(updateProgress(qint64)));
@@ -192,19 +193,19 @@ void AvRecorder::onStateChanged(QMediaRecorder::State state)
     switch (state) {
     case QMediaRecorder::RecordingState:
         ui->recordButton->setText(tr("Stop"));
-        ui->pauseButton->setText(tr("Pause"));
+        //ui->pauseButton->setText(tr("Pause"));
         break;
     case QMediaRecorder::PausedState:
         ui->recordButton->setText(tr("Stop"));
-        ui->pauseButton->setText(tr("Resume"));
+        //ui->pauseButton->setText(tr("Resume"));
         break;
     case QMediaRecorder::StoppedState:
         ui->recordButton->setText(tr("Record"));
-        ui->pauseButton->setText(tr("Pause"));
+        //ui->pauseButton->setText(tr("Pause"));
         break;
     }
 
-    ui->pauseButton->setEnabled(audioRecorder->state() != QMediaRecorder::StoppedState);
+    //ui->pauseButton->setEnabled(audioRecorder->state() != QMediaRecorder::StoppedState);
 
     emit stateChanged(state);
 }

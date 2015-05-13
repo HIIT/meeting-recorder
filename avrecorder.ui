@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>AvRecorder</string>
+   <string>Re:Know Meeting recorder</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="layoutWidget">
@@ -19,7 +19,7 @@
      <rect>
       <x>12</x>
       <y>12</y>
-      <width>543</width>
+      <width>562</width>
       <height>467</height>
      </rect>
     </property>
@@ -215,12 +215,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pauseButton">
+          <widget class="QPushButton" name="uploadButton">
            <property name="enabled">
             <bool>false</bool>
            </property>
            <property name="text">
-            <string>Pause</string>
+            <string>Upload</string>
            </property>
           </widget>
          </item>
@@ -341,6 +341,12 @@
          <property name="sizeType">
           <enum>QSizePolicy::Maximum</enum>
          </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
         </spacer>
        </item>
       </layout>
@@ -417,7 +423,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pauseButton</sender>
+   <sender>uploadButton</sender>
    <signal>clicked()</signal>
    <receiver>AvRecorder</receiver>
    <slot>togglePause()</slot>

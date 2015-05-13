@@ -55,9 +55,6 @@ void CameraThread::run() Q_DECL_OVERRIDE {
       return;
     }
 
-    framerate = 15;
-    fourcc = CV_FOURCC('m','p','4','v');
-
 #if defined(Q_OS_LINUX)
     qDebug() << "Camera" << idx
 	     << ": Trying to set input size to" << desired_input_size.width 
@@ -85,7 +82,11 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     filename = QString("capture%1.avi").arg(idx);
 
     record_video = false;
-    output_size = Size(0,0);
+    fourcc = CV_FOURCC('m','p','4','v');
+
+    // Note: These need to match the default values in AvRecorder::AvRecorder():
+    framerate = 15;
+    output_size = Size(640,360);
 
     // initialize initial timestamps
     nextFrameTimestamp = microsec_clock::local_time();
