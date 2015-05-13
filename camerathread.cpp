@@ -50,7 +50,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     // initialize capture on default source
     VideoCapture capture(idx);
     if (!capture.isOpened()) {
-      emit errorMessage(QString("ERROR: Failed to initialize camera %1.")
+      emit errorMessage(QString("Warning: Failed to initialize camera %1.")
                                 .arg(idx));
       return;
     }
@@ -256,3 +256,7 @@ void CameraThread::setCameraState(int i, int state) {
 }
 
 // ---------------------------------------------------------------------
+
+// Local Variables:
+// c-basic-offset: 4
+// End:
