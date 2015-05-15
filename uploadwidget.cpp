@@ -10,6 +10,8 @@
 UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent) 
 {
 
+    resize(700,500);
+
     txt = new QPlainTextEdit();
     txt->setPlainText("UploadWidget() started");
 
