@@ -217,7 +217,7 @@
          <item>
           <widget class="QPushButton" name="uploadButton">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>Upload</string>
@@ -426,7 +426,7 @@
    <sender>uploadButton</sender>
    <signal>clicked()</signal>
    <receiver>AvRecorder</receiver>
-   <slot>togglePause()</slot>
+   <slot>upload()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>252</x>
@@ -511,5 +511,6 @@
   <slot>setCameraFramerate(QString)</slot>
   <slot>setCamera0State(int)</slot>
   <slot>setCamera1State(int)</slot>
+  <slot>upload()</slot>
  </slots>
 </ui>

@@ -66,3 +66,7 @@ private:
 
 #endif // CAMERATHREAD_H
 
+// Local Variables:
+// mode: c++
+// c-basic-offset: 4
+// End:

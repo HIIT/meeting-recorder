@@ -22,6 +22,7 @@ macx {
      LIBS += $$OPENCVDIR/lib/libopencv_core.dylib
      LIBS += $$OPENCVDIR/lib/libopencv_highgui.dylib
      LIBS += $$OPENCVDIR/lib/libopencv_imgproc.dylib
+     LIBS += $$OPENCVDIR/lib/libssh2.dylib
 }
 
 linux-g++* {
@@ -34,20 +35,23 @@ linux-g++* {
      LIBS += $$OPENCVDIR/lib/libopencv_imgproc.so
 }
 
-
 QT += multimedia
 QT += widgets
 
 HEADERS = \
     avrecorder.h \
     qaudiolevel.h \
-    camerathread.h
+    camerathread.h \
+    uploadwidget.h \
+    uploadthread.h
 
 SOURCES = \
     main.cpp \
     avrecorder.cpp \
     qaudiolevel.cpp \
-    camerathread.cpp
+    camerathread.cpp \
+    uploadwidget.cpp \
+    uploadthread.cpp
 
 FORMS += avrecorder.ui
 

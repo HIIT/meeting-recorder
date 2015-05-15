@@ -44,12 +44,15 @@
 #include <QFileDialog>
 #include <QMediaRecorder>
 #include <QHostInfo>
+#include <QMessageBox>
 #include <QDebug>
 
 #include "avrecorder.h"
 #include "qaudiolevel.h"
 
 #include "ui_avrecorder.h"
+
+#include "uploadwidget.h"
 
 static qreal getPeakValue(const QAudioFormat &format);
 static QVector<qreal> getBufferLevels(const QAudioBuffer &buffer);
@@ -272,6 +275,34 @@ void AvRecorder::togglePause()
     else
         audioRecorder->record();
 }
+
+void AvRecorder::upload()
+{
+    if (!outputLocationSet)
+        setOutputLocation();
+
+    if (!outputLocationSet)
+        return;
+
+    QFileInfo wavFile(dirName+"/audio.wav");
+    QFileInfo ca1File(dirName+"/capture0.avi");
+    QFileInfo ca2File(dirName+"/capture1.avi");
+    int totalsize = (wavFile.size()+ca1File.size()+ca2File.size())/1024/1024;
+
+    QMessageBox msgBox;
+    msgBox.setText(QString("About to upload meeting data from %1 (%2 MB).")
+		   .arg(dirName).arg(totalsize));
+    msgBox.setInformativeText("Do you want to start the upload process?");
+    msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Ok);
+
+    int ret = msgBox.exec();
+    if (ret == QMessageBox::Ok) {
+	UploadWidget uw(this, dirName);
+	uw.exec();
+    }
+}
+
 
 void AvRecorder::setOutputLocation()
 {

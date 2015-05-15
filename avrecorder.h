@@ -78,6 +78,7 @@ public slots:
 
 private slots:
     void setOutputLocation();
+    void upload();
     void togglePause();
     void toggleRecord();
 
