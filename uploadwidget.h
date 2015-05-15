@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QPlainTextEdit>
+#include <QProgressBar>
 
 #include "uploadthread.h"
 
@@ -14,6 +15,8 @@ signals:
 
 public slots:
     void appendText(const QString&);
+    void updateProgressbar();
+    void setMaximumProgressbar(int);
 
 public:
     UploadWidget(QWidget *parent, QString _directory);
@@ -21,6 +24,8 @@ public:
 private:
     UploadThread *uploader;
     QPlainTextEdit *txt;
+    QProgressBar *pbar;
+    int pbar_value;
 
 };
 

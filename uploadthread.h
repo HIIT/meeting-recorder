@@ -11,6 +11,8 @@ class UploadThread : public QThread
 
 signals:
     void uploadMessage(const QString &e);
+    void blockSent();
+    void nBlocks(int);
 
 public slots:
 
@@ -19,6 +21,8 @@ public:
 
 private:
     QString directory;
+
+    int buffersize;
 
     QString server_ip;
     QString server_path;

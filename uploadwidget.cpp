@@ -13,6 +13,9 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
     txt = new QPlainTextEdit();
     txt->setPlainText("UploadWidget() started");
 
+    pbar_value = 0;
+    pbar = new QProgressBar();
+
     QDialogButtonBox *bb = new QDialogButtonBox(QDialogButtonBox::Ok
 						| QDialogButtonBox::Cancel);
     
@@ -21,6 +24,7 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
 
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(txt);
+    layout->addWidget(pbar);
     layout->addWidget(bb);
     setLayout(layout);
 
@@ -30,6 +34,10 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
 
     connect(uploader, SIGNAL(uploadMessage(const QString&)), 
 	    this, SLOT(appendText(const QString&)));
+    connect(uploader, SIGNAL(blockSent()),
+	    this, SLOT(updateProgressbar()));
+    connect(uploader, SIGNAL(nBlocks(int)),
+	    this, SLOT(setMaximumProgressbar(int)));
 
 }
 
@@ -37,6 +45,21 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
 
 void UploadWidget::appendText(const QString& text) {
     txt->appendPlainText(text);
+}
+
+// ---------------------------------------------------------------------
+
+void UploadWidget::updateProgressbar() {
+    // qDebug() << "updateProgressbar() called";
+    pbar->setValue(++pbar_value);
+}
+
+// ---------------------------------------------------------------------
+
+void UploadWidget::setMaximumProgressbar(int value) {
+    qDebug() << "setMaximumProgressbar() called, value:" << value;
+    pbar->setMinimum(0);
+    pbar->setMaximum(value);
 }
 
 // ---------------------------------------------------------------------

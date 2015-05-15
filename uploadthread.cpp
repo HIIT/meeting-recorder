@@ -17,6 +17,8 @@ extern "C" {
 
 UploadThread::UploadThread(QString _dir) : directory(_dir)
 {
+  buffersize = 1024*100;
+
   server_ip = "128.214.113.2";
   server_path = "/home/fs/jmakoske/foo";
   username = "jmakoske";  
@@ -35,11 +37,16 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   emit uploadMessage("libssh2 initialization successful");
 
   QString lf = directory + "/audio.wav";
+  QFileInfo lf_info(lf);
+  emit nBlocks(lf_info.size()/buffersize+1);
+  char mem[buffersize], *ptr;
+
   QByteArray ba_lf = lf.toLatin1();
   const char *loclfile = ba_lf.data();
   FILE *local = fopen(loclfile, "rb");
   if (!local) {
-    emit uploadMessage(QString("can't open local file %1").arg(loclfile));
+    emit uploadMessage(QString("can't open local file %1 (%2 MB)")
+		       .arg(loclfile).arg(lf_info.size()/1024/1024));
     return;
   }
   emit uploadMessage(QString("opened local file %1").arg(loclfile));
@@ -127,7 +134,6 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   }
 
   emit uploadMessage("libssh2_sftp_open() is done, now send data!");
-  char mem[1024*100], *ptr;
 
   do {
     size_t nread = fread(mem, 1, sizeof(mem), local);
@@ -145,7 +151,8 @@ void UploadThread::run() Q_DECL_OVERRIDE {
       ptr += rc;
       nread -= rc;
     } while (nread);
-    
+
+    emit blockSent();
   } while (rc > 0);
   
   libssh2_sftp_close(sftp_handle);
