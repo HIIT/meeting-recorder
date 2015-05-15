@@ -17,7 +17,7 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
   buffersize = 1024*100;
 
   server_ip = "128.214.113.2";
-  server_path = "/home/fs/jmakoske/foo";
+  server_path = "/home/fs/jmakoske/foo/bar";
   username = "jmakoske";  
 }
 
@@ -83,6 +83,10 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   QStringList files = dir.entryList();
   long long totalsize = 0;
 
+  QByteArray ba_sp = server_path.toLatin1();
+  const char *sftppath = ba_sp.data();
+  LIBSSH2_SFTP_ATTRIBUTES fileinfo;
+
   // authentication by public key:
   const char *password="password";
   if (libssh2_userauth_publickey_fromfile(session, 
@@ -101,7 +105,24 @@ void UploadThread::run() Q_DECL_OVERRIDE {
     emit uploadMessage("unable to init SFTP session");
     goto shutdown;
   }
-  
+
+  rc = libssh2_sftp_stat(sftp_session, sftppath, &fileinfo);
+
+  if (rc) {
+    emit uploadMessage(QString("server path %1 does not exist, creating it").
+		       arg(server_path));
+    rc = libssh2_sftp_mkdir(sftp_session, sftppath,
+			    LIBSSH2_SFTP_S_IRWXU|
+			    LIBSSH2_SFTP_S_IRGRP|LIBSSH2_SFTP_S_IXGRP|
+			    LIBSSH2_SFTP_S_IROTH|LIBSSH2_SFTP_S_IXOTH);
+
+    if (rc) {
+      emit uploadMessage(QString("libssh2_sftp_mkdir failed: (%1)").arg(rc));
+      goto shutdown;
+    }
+  } else
+    emit uploadMessage(QString("server path %1 exists").arg(server_path));
+
   for (int i = 0; i < files.size(); ++i) {
     QString lf = directory + "/" + files.at(i);
     QFileInfo lf_info(lf);
