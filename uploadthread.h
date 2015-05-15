@@ -3,6 +3,11 @@
 
 #include <QThread>
 
+extern "C" {
+#include <libssh2.h>
+#include <libssh2_sftp.h>
+}
+
 class UploadThread : public QThread
 {
     Q_OBJECT
@@ -20,6 +25,8 @@ public:
     UploadThread(QString directory);
 
 private:
+    bool processFile(LIBSSH2_SFTP *, const QString &);
+
     QString directory;
 
     int buffersize;

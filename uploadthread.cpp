@@ -8,9 +8,6 @@ extern "C" {
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-
-#include <libssh2.h>
-#include <libssh2_sftp.h>
 }
 
 // ---------------------------------------------------------------------
@@ -35,25 +32,6 @@ void UploadThread::run() Q_DECL_OVERRIDE {
     return;
   }
   emit uploadMessage("libssh2 initialization successful");
-
-  QString lf = directory + "/audio.wav";
-  QFileInfo lf_info(lf);
-  emit nBlocks(lf_info.size()/buffersize+1);
-  char mem[buffersize], *ptr;
-
-  QByteArray ba_lf = lf.toLatin1();
-  const char *loclfile = ba_lf.data();
-  FILE *local = fopen(loclfile, "rb");
-  if (!local) {
-    emit uploadMessage(QString("can't open local file %1 (%2 MB)")
-		       .arg(loclfile).arg(lf_info.size()/1024/1024));
-    return;
-  }
-  emit uploadMessage(QString("opened local file %1").arg(loclfile));
-
-  QString sp = server_path + "/audio.wav";
-  QByteArray ba_sp = sp.toLatin1();
-  const char *sftppath = ba_sp.data();  
 
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   unsigned long hostaddr = inet_addr(server_ip.toStdString().c_str());
@@ -99,7 +77,11 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   emit uploadMessage("private key: "+ prikey);
 
   LIBSSH2_SFTP *sftp_session;
-  LIBSSH2_SFTP_HANDLE *sftp_handle;
+
+  QDir dir(directory);
+  dir.setFilter(QDir::NoDotAndDotDot|QDir::Files);
+  QStringList files = dir.entryList();
+  long long totalsize = 0;
 
   // authentication by public key:
   const char *password="password";
@@ -120,9 +102,56 @@ void UploadThread::run() Q_DECL_OVERRIDE {
     goto shutdown;
   }
   
+  for (int i = 0; i < files.size(); ++i) {
+    QString lf = directory + "/" + files.at(i);
+    QFileInfo lf_info(lf);
+    totalsize += lf_info.size();
+  }
+  emit nBlocks(totalsize/buffersize+1);
+
+  for (int i = 0; i < files.size(); ++i)
+    if (!processFile(sftp_session, files.at(i)))
+      goto shutdown;
+
+  libssh2_sftp_shutdown(sftp_session);
+
+shutdown:
+  libssh2_session_disconnect(session,
+			     "Normal Shutdown, Thank you for playing");
+  libssh2_session_free(session);
+
+  close(sock);
+  emit uploadMessage("all done");
+
+  libssh2_exit();
+
+  emit uploadMessage("UploadThread::run() ending");
+}
+
+// ---------------------------------------------------------------------
+
+bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
+			       const QString &filename) {
+
+  QString lf = directory + "/" + filename;
+
+  QByteArray ba_lf = lf.toLatin1();
+  const char *loclfile = ba_lf.data();
+  FILE *local = fopen(loclfile, "rb");
+  if (!local) {
+    emit uploadMessage(QString("can't open local file %1")
+		       .arg(loclfile));
+    return false;
+  }
+  emit uploadMessage(QString("opened local file %1").arg(loclfile));
+
+  QString sp = server_path + "/" + filename;
+  QByteArray ba_sp = sp.toLatin1();
+  const char *sftppath = ba_sp.data();
+
   emit uploadMessage(QString("libssh2_sftp_open() for %1").arg(sftppath));
   /* Request a file via SFTP */
-  sftp_handle =
+  LIBSSH2_SFTP_HANDLE *sftp_handle =
     libssh2_sftp_open(sftp_session, sftppath,
                       LIBSSH2_FXF_WRITE|LIBSSH2_FXF_CREAT|LIBSSH2_FXF_TRUNC,
                       LIBSSH2_SFTP_S_IRUSR|LIBSSH2_SFTP_S_IWUSR|
@@ -130,10 +159,15 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   
   if (!sftp_handle) {
     emit uploadMessage("unable to open file with SFTP");
-    goto shutdown;
+    if (local)
+      fclose(local);
+    return false;
   }
 
-  emit uploadMessage("libssh2_sftp_open() is done, now send data!");
+  emit uploadMessage("libssh2_sftp_open() is done, now sending data");
+
+  char mem[buffersize], *ptr;
+  int rc;
 
   do {
     size_t nread = fread(mem, 1, sizeof(mem), local);
@@ -156,20 +190,11 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   } while (rc > 0);
   
   libssh2_sftp_close(sftp_handle);
-  libssh2_sftp_shutdown(sftp_session);
 
-shutdown:
-  libssh2_session_disconnect(session,
-			     "Normal Shutdown, Thank you for playing");
-  libssh2_session_free(session);
-
-  close(sock);
   if (local)
     fclose(local);  
-  emit uploadMessage("all done");
 
-  libssh2_exit();
+  emit uploadMessage("data sent successfully");
 
-  emit uploadMessage("UploadThread::run() ending");
+  return true;
 }
-// ---------------------------------------------------------------------
