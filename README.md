@@ -25,6 +25,18 @@ Ubuntu:
 
 	sudo apt-get install v4l-utils
 
+### libssh2
+
+Ubuntu:
+
+    sudo apt-get install libssh2-1-dev
+        
+OS X / MacPorts:
+
+    sudo port install libssh2
+
+
+
 ## Compiling
 
 	PATH_TO_QT_BINDIR/qmake
