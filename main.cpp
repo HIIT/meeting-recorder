@@ -60,6 +60,10 @@ void help(const QString& cmd) {
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setOrganizationName("HIIT");
+    QCoreApplication::setOrganizationDomain("hiit.fi");
+    QCoreApplication::setApplicationName("mrecorder");
+
     QApplication app(argc, argv);
 
     AvRecorder recorder;
