@@ -114,13 +114,13 @@ void UploadWidget::preferences() {
 
 void UploadWidget::preferences_new() {
     QDialog *prefs = new QDialog(this);
-    prefs->resize(500,200);
+    prefs->resize(750,200);
 
     QString un = settings.value("username", "").toString();
     QString ip = settings.value("server_ip",
 				"128.214.113.2").toString();
     QString sp = settings.value("server_path",
-				"/home/fs/jmakoske/foo").toString();
+				"/group/reknow/instrumented_meeting_room/data").toString();
 
     QLineEdit *usernameEdit = new QLineEdit(un, prefs);
     QLineEdit *serveripEdit = new QLineEdit(ip, prefs);
@@ -134,6 +134,7 @@ void UploadWidget::preferences_new() {
 
     QGroupBox *gb = new QGroupBox("Preferences");
     QFormLayout *flayout = new QFormLayout;
+    flayout->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
     flayout->addRow(new QLabel("username"), usernameEdit);
     flayout->addRow(new QLabel("server IP address"), serveripEdit);
     flayout->addRow(new QLabel("server path"), serverpathEdit);
@@ -181,7 +182,7 @@ QString UploadWidget::server_path() {
 // ---------------------------------------------------------------------
 
 void UploadWidget::uploadOK() {
-    exitButton->setText("Ok");
+    exitButton->setText("OK");
 }
 
 // ---------------------------------------------------------------------
