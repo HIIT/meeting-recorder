@@ -33,6 +33,7 @@ linux-g++* {
      LIBS += $$OPENCVDIR/lib/libopencv_core.so
      LIBS += $$OPENCVDIR/lib/libopencv_highgui.so
      LIBS += $$OPENCVDIR/lib/libopencv_imgproc.so
+     LIBS += /usr/lib/x86_64-linux-gnu/libssh2.so.1
 }
 
 QT += multimedia
