@@ -17,8 +17,8 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
   buffersize = 1024*100;
 
   server_ip = "128.214.113.2";
-  server_path = "/home/fs/jmakoske/foo/bar";
-  username = "jmakoske";  
+  server_path = "/home/fs/jmakoske/foo";
+  username = "";
 }
 
 // ---------------------------------------------------------------------
@@ -26,9 +26,18 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
 void UploadThread::run() Q_DECL_OVERRIDE {
   emit uploadMessage("UploadThread::run() starting");
 
+  if (username == "") {
+    emit uploadMessage("username not set, exiting");
+    return;
+  }
+  server_path_user = server_path + "/" + username;
+  server_path_meeting = server_path_user + "/" + directory.section('/', -1);
+  emit uploadMessage("target directory: "+server_path_meeting);
+
   int rc = libssh2_init(0);
   if (rc != 0) {
-    emit uploadMessage(QString("libssh2_init() failed (%1)").arg(rc));
+    emit uploadMessage(QString("libssh2_init() failed (%1), exiting")
+		       .arg(rc));
     return;
   }
   emit uploadMessage("libssh2 initialization successful");
@@ -42,14 +51,14 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   sin.sin_addr.s_addr = hostaddr;
   if (::connect(sock, (struct sockaddr*)(&sin),
 		sizeof(struct sockaddr_in)) != 0) {
-    emit uploadMessage("failed to connect()");
+    emit uploadMessage("failed to connect(), exiting");
     return;
   }
   emit uploadMessage("connection established");
 
   LIBSSH2_SESSION *session = libssh2_session_init();
   if (!session) {
-    emit uploadMessage("libssh2_session_init() failed"); 
+    emit uploadMessage("libssh2_session_init() failed, exiting");
     return;
   }
   emit uploadMessage("libssh2 session initialization successful");
@@ -57,12 +66,14 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   libssh2_session_set_blocking(session, 1);
   rc = libssh2_session_handshake(session, sock);
   if (rc) {
-    emit uploadMessage(QString("failure establishing SSH session (%1)").arg(rc));
+    emit uploadMessage(QString("failure establishing SSH session (%1)"
+			       ", exiting").arg(rc));
     return;
   }
   emit uploadMessage("session established");
 
-  const char *fingerprint = libssh2_hostkey_hash(session, LIBSSH2_HOSTKEY_HASH_SHA1);
+  const char *fingerprint = libssh2_hostkey_hash(session,
+						 LIBSSH2_HOSTKEY_HASH_SHA1);
   QString fp = "fingerprint: ";
   for(int i = 0; i < 20; i++) {
     QChar c = (QChar)fingerprint[i];
@@ -73,8 +84,8 @@ void UploadThread::run() Q_DECL_OVERRIDE {
 
   QString pubkey = QDir::homePath()+"/.ssh/id_rsa.pub";
   QString prikey = QDir::homePath()+"/.ssh/id_rsa";
-  emit uploadMessage("public key: "+ pubkey);
-  emit uploadMessage("private key: "+ prikey);
+  emit uploadMessage("using public key: "+ pubkey);
+  emit uploadMessage("using private key: "+ prikey);
 
   LIBSSH2_SFTP *sftp_session;
 
@@ -83,9 +94,6 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   QStringList files = dir.entryList();
   long long totalsize = 0;
 
-  QByteArray ba_sp = server_path.toLatin1();
-  const char *sftppath = ba_sp.data();
-  LIBSSH2_SFTP_ATTRIBUTES fileinfo;
 
   // authentication by public key:
   const char *password="password";
@@ -106,22 +114,10 @@ void UploadThread::run() Q_DECL_OVERRIDE {
     goto shutdown;
   }
 
-  rc = libssh2_sftp_stat(sftp_session, sftppath, &fileinfo);
-
-  if (rc) {
-    emit uploadMessage(QString("server path %1 does not exist, creating it").
-		       arg(server_path));
-    rc = libssh2_sftp_mkdir(sftp_session, sftppath,
-			    LIBSSH2_SFTP_S_IRWXU|
-			    LIBSSH2_SFTP_S_IRGRP|LIBSSH2_SFTP_S_IXGRP|
-			    LIBSSH2_SFTP_S_IROTH|LIBSSH2_SFTP_S_IXOTH);
-
-    if (rc) {
-      emit uploadMessage(QString("libssh2_sftp_mkdir failed: (%1)").arg(rc));
-      goto shutdown;
-    }
-  } else
-    emit uploadMessage(QString("server path %1 exists").arg(server_path));
+  if (!checkDirectory(sftp_session, server_path_user))
+    goto shutdown;
+  if (!checkDirectory(sftp_session, server_path_meeting))
+    goto shutdown;
 
   for (int i = 0; i < files.size(); ++i) {
     QString lf = directory + "/" + files.at(i);
@@ -151,6 +147,35 @@ shutdown:
 
 // ---------------------------------------------------------------------
 
+bool UploadThread::checkDirectory(LIBSSH2_SFTP *sftp_session, 
+				  const QString &dir) {
+
+  QByteArray ba_sp = dir.toLatin1();
+  const char *sftppath = ba_sp.data();
+  LIBSSH2_SFTP_ATTRIBUTES fileinfo;
+
+  int rc = libssh2_sftp_stat(sftp_session, sftppath, &fileinfo);
+
+  if (rc) {
+    emit uploadMessage(QString("server path %1 does not exist, creating it").
+		       arg(dir));
+    rc = libssh2_sftp_mkdir(sftp_session, sftppath,
+			    LIBSSH2_SFTP_S_IRWXU|
+			    LIBSSH2_SFTP_S_IRGRP|LIBSSH2_SFTP_S_IXGRP|
+			    LIBSSH2_SFTP_S_IROTH|LIBSSH2_SFTP_S_IXOTH);
+
+    if (rc) {
+      emit uploadMessage(QString("libssh2_sftp_mkdir failed: (%1)").arg(rc));
+      return false;
+    }
+  } else
+    emit uploadMessage(QString("server path %1 exists").arg(dir));
+
+  return true;
+}
+
+// ---------------------------------------------------------------------
+
 bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
 			       const QString &filename) {
 
@@ -166,7 +191,7 @@ bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
   }
   emit uploadMessage(QString("opened local file %1").arg(loclfile));
 
-  QString sp = server_path + "/" + filename;
+  QString sp = server_path_meeting + "/" + filename;
   QByteArray ba_sp = sp.toLatin1();
   const char *sftppath = ba_sp.data();
 
@@ -216,6 +241,15 @@ bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
     fclose(local);  
 
   emit uploadMessage("data sent successfully");
+  emit uploadFinished();
 
   return true;
 }
+
+// ---------------------------------------------------------------------
+
+void UploadThread::setPreferences(const QString &_username) {
+  username = _username;
+}
+
+// ---------------------------------------------------------------------

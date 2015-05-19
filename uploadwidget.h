@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QPlainTextEdit>
 #include <QProgressBar>
+#include <QPushButton>
+#include <QSettings>
 
 #include "uploadthread.h"
 
@@ -17,15 +19,23 @@ public slots:
     void appendText(const QString&);
     void updateProgressbar();
     void setMaximumProgressbar(int);
+    void preferences();
+    void startUpload();
+    void uploadOK();
 
 public:
     UploadWidget(QWidget *parent, QString _directory);
 
 private:
+    QString username();
+
     UploadThread *uploader;
     QPlainTextEdit *txt;
     QProgressBar *pbar;
     int pbar_value;
+    QPushButton *exitButton;
+
+    QSettings settings;
 
 };
 

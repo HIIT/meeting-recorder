@@ -18,15 +18,20 @@ signals:
     void uploadMessage(const QString &e);
     void blockSent();
     void nBlocks(int);
+    void uploadFinished();
 
 public slots:
+
+    void setPreferences(const QString &);
 
 public:
     UploadThread(QString directory);
 
 private:
     bool processFile(LIBSSH2_SFTP *, const QString &);
+    bool checkDirectory(LIBSSH2_SFTP *, const QString &);
 
+    /// local directory to upload
     QString directory;
 
     int buffersize;
@@ -34,6 +39,10 @@ private:
     QString server_ip;
     QString server_path;
     QString username;  
+
+    QString server_path_user;
+    QString server_path_meeting;
+
 };
 
 #endif // UPLOADTHREAD_H
