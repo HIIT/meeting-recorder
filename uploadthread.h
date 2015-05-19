@@ -1,6 +1,7 @@
 #ifndef UPLOADTHREAD_H
 #define UPLOADTHREAD_H
 
+#include <QtCore>
 #include <QThread>
 
 extern "C" {
@@ -19,10 +20,12 @@ signals:
     void blockSent();
     void nBlocks(int);
     void uploadFinished();
+    void passwordRequested();
 
 public slots:
 
     void setPreferences(const QString &);
+    void setPassword(const QString &);
 
 public:
     UploadThread(QString directory);
@@ -42,6 +45,11 @@ private:
 
     QString server_path_user;
     QString server_path_meeting;
+
+    QString password;
+
+    QWaitCondition passwordNeeded;
+    QMutex mutex;
 
 };
 

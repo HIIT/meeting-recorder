@@ -14,14 +14,17 @@ class UploadWidget : public QDialog
     Q_OBJECT
 
 signals:
+    void passwordEntered(const QString&);
 
 public slots:
     void appendText(const QString&);
     void updateProgressbar();
     void setMaximumProgressbar(int);
     void preferences();
+    void preferences_new();
     void startUpload();
     void uploadOK();
+    void passwordWidget();
 
 public:
     UploadWidget(QWidget *parent, QString _directory);

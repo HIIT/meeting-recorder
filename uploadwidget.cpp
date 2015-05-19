@@ -1,8 +1,11 @@
 
 #include <QDebug>
 #include <QDialogButtonBox>
+#include <QGroupBox>
 #include <QVBoxLayout>
+#include <QFormLayout>
 #include <QInputDialog>
+#include <QLabel>
 
 #include "uploadwidget.h"
 
@@ -59,6 +62,10 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
 	    this, SLOT(setMaximumProgressbar(int)));
     connect(uploader, SIGNAL(uploadFinished()),
 	    this, SLOT(uploadOK()));
+    connect(uploader, SIGNAL(passwordRequested()),
+	    this, SLOT(passwordWidget()));
+    connect(this, SIGNAL(passwordEntered(const QString&)),
+	    uploader, SLOT(setPassword(const QString&)));
 
 }
 
@@ -101,6 +108,38 @@ void UploadWidget::preferences() {
 
 // ---------------------------------------------------------------------
 
+void UploadWidget::preferences_new() {
+    QDialog *prefs = new QDialog(this);
+
+    QString deftext = settings.value("username", "").toString();
+
+    QLineEdit *usernameEdit = new QLineEdit(deftext, prefs);
+    QLineEdit *serveripEdit = new QLineEdit(prefs);
+    QLineEdit *serverpathEdit = new QLineEdit(prefs);
+
+    QDialogButtonBox *pbb = new QDialogButtonBox(QDialogButtonBox::Ok
+						 | QDialogButtonBox::Cancel);
+
+    connect(pbb, SIGNAL(accepted()), prefs, SLOT(accept()));
+    connect(pbb, SIGNAL(rejected()), prefs, SLOT(reject()));
+
+    QGroupBox *gb = new QGroupBox("Preferences");
+    QFormLayout *flayout = new QFormLayout;
+    flayout->addRow(new QLabel("HIIT username"), usernameEdit);
+    flayout->addRow(new QLabel("server IP address"), serveripEdit);
+    flayout->addRow(new QLabel("server path"), serverpathEdit);
+    gb->setLayout(flayout);
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(gb);
+    layout->addWidget(pbb);
+
+    prefs->setLayout(layout);
+    prefs->exec();
+
+}
+// ---------------------------------------------------------------------
+
 void UploadWidget::startUpload() {
     uploader->setPreferences(username());
     uploader->start();
@@ -120,6 +159,19 @@ void UploadWidget::uploadOK() {
     exitButton->setText("Ok");
 }
 
+// ---------------------------------------------------------------------
+
+void UploadWidget::passwordWidget() {
+    bool ok;
+    QString pw = QInputDialog::getText(NULL, "Enter your password",
+				       "Password:", QLineEdit::Password,
+				       "", &ok);
+    if (ok)
+	emit passwordEntered(pw);
+    else
+	emit passwordEntered("");
+
+}
 
 // ---------------------------------------------------------------------
 

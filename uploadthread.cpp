@@ -19,6 +19,7 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
   server_ip = "128.214.113.2";
   server_path = "/home/fs/jmakoske/foo";
   username = "";
+  password = "";
 }
 
 // ---------------------------------------------------------------------
@@ -94,18 +95,34 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   QStringList files = dir.entryList();
   long long totalsize = 0;
 
-
   // authentication by public key:
-  const char *password="password";
+  const char *dummypassword="password";
   if (libssh2_userauth_publickey_fromfile(session, 
 					  username.toStdString().c_str(),
 					  pubkey.toStdString().c_str(),
 					  prikey.toStdString().c_str(),
-					  password)) {
+					  dummypassword)) {
     emit uploadMessage("authentication by public key failed");
-    goto shutdown;
-  }
-  emit uploadMessage("authentication by public key successful");
+
+    //authentication via password
+    mutex.lock();
+    emit passwordRequested();
+    passwordNeeded.wait(&mutex);
+    mutex.unlock();
+    if (password == "") {
+      emit uploadMessage("authentication by password cancelled");
+      goto shutdown;
+    }
+    if (libssh2_userauth_password(session,
+				  username.toStdString().c_str(),
+				  password.toStdString().c_str())) {
+      emit uploadMessage("authentication by password failed");
+      goto shutdown;
+    } else
+      emit uploadMessage("authentication by password successful");
+
+  } else
+    emit uploadMessage("authentication by public key successful");
 
   emit uploadMessage("libssh2_sftp_init()!");
   sftp_session = libssh2_sftp_init(session);
@@ -250,6 +267,15 @@ bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
 
 void UploadThread::setPreferences(const QString &_username) {
   username = _username;
+}
+
+// ---------------------------------------------------------------------
+
+void UploadThread::setPassword(const QString &_password) {
+  password = _password;
+  mutex.lock();
+  passwordNeeded.wakeAll();
+  mutex.unlock();
 }
 
 // ---------------------------------------------------------------------
