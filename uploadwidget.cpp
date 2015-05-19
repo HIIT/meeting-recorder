@@ -23,20 +23,24 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
     pbar = new QProgressBar();
 
     if (!settings.contains("username"))
-	preferences();
+	preferences_new();
     else
-	appendText("using username: " + username());
+	appendText("using username: " + username() + " server_ip:" + server_ip()
+		   + " server_path:" + server_path());
 
     QPushButton *prefButton = new QPushButton("Preferences");
+    prefButton->setAutoDefault(false);
     QPushButton *startButton = new QPushButton("Start");
+    startButton->setAutoDefault(false);
     exitButton = new QPushButton("Cancel");
+    exitButton->setAutoDefault(false);
 
     QDialogButtonBox *bb = new QDialogButtonBox();
     bb->addButton(prefButton, QDialogButtonBox::ActionRole);
     bb->addButton(startButton, QDialogButtonBox::ActionRole);
     bb->addButton(exitButton, QDialogButtonBox::RejectRole);
 
-    connect(prefButton, SIGNAL(released()), this, SLOT(preferences()));
+    connect(prefButton, SIGNAL(released()), this, SLOT(preferences_new()));
     connect(startButton, SIGNAL(released()), this, SLOT(startUpload()));
     connect(exitButton, SIGNAL(released()), this, SLOT(reject()));
 
@@ -110,12 +114,17 @@ void UploadWidget::preferences() {
 
 void UploadWidget::preferences_new() {
     QDialog *prefs = new QDialog(this);
+    prefs->resize(500,200);
 
-    QString deftext = settings.value("username", "").toString();
+    QString un = settings.value("username", "").toString();
+    QString ip = settings.value("server_ip",
+				"128.214.113.2").toString();
+    QString sp = settings.value("server_path",
+				"/home/fs/jmakoske/foo").toString();
 
-    QLineEdit *usernameEdit = new QLineEdit(deftext, prefs);
-    QLineEdit *serveripEdit = new QLineEdit(prefs);
-    QLineEdit *serverpathEdit = new QLineEdit(prefs);
+    QLineEdit *usernameEdit = new QLineEdit(un, prefs);
+    QLineEdit *serveripEdit = new QLineEdit(ip, prefs);
+    QLineEdit *serverpathEdit = new QLineEdit(sp, prefs);
 
     QDialogButtonBox *pbb = new QDialogButtonBox(QDialogButtonBox::Ok
 						 | QDialogButtonBox::Cancel);
@@ -125,7 +134,7 @@ void UploadWidget::preferences_new() {
 
     QGroupBox *gb = new QGroupBox("Preferences");
     QFormLayout *flayout = new QFormLayout;
-    flayout->addRow(new QLabel("HIIT username"), usernameEdit);
+    flayout->addRow(new QLabel("username"), usernameEdit);
     flayout->addRow(new QLabel("server IP address"), serveripEdit);
     flayout->addRow(new QLabel("server path"), serverpathEdit);
     gb->setLayout(flayout);
@@ -135,13 +144,18 @@ void UploadWidget::preferences_new() {
     layout->addWidget(pbb);
 
     prefs->setLayout(layout);
-    prefs->exec();
+    if (prefs->exec()) {
+	settings.setValue("username", usernameEdit->text());
+	settings.setValue("server_ip", serveripEdit->text());
+	settings.setValue("server_path", serverpathEdit->text());
+	appendText("updated preferences");
+    }
 
 }
 // ---------------------------------------------------------------------
 
 void UploadWidget::startUpload() {
-    uploader->setPreferences(username());
+    uploader->setPreferences(username(), server_ip(), server_path());
     uploader->start();
 }
 
@@ -152,6 +166,17 @@ QString UploadWidget::username() {
     return settings.value("username", "MISSING_USERNAME").toString();
 }
 
+// ---------------------------------------------------------------------
+
+QString UploadWidget::server_ip() {
+    return settings.value("server_ip", "MISSING_SERVERIP").toString();
+}
+
+// ---------------------------------------------------------------------
+
+QString UploadWidget::server_path() {
+    return settings.value("server_path", "MISSING_SERVERPATH").toString();
+}
 
 // ---------------------------------------------------------------------
 

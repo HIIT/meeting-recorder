@@ -24,7 +24,8 @@ signals:
 
 public slots:
 
-    void setPreferences(const QString &);
+    void setPreferences(const QString &, const QString &,
+			const QString &);
     void setPassword(const QString &);
 
 public:

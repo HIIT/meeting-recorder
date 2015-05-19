@@ -16,8 +16,8 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
 {
   buffersize = 1024*100;
 
-  server_ip = "128.214.113.2";
-  server_path = "/home/fs/jmakoske/foo";
+  server_ip = "";
+  server_path = "";
   username = "";
   password = "";
 }
@@ -27,8 +27,16 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
 void UploadThread::run() Q_DECL_OVERRIDE {
   emit uploadMessage("UploadThread::run() starting");
 
-  if (username == "") {
+  if (username == "" || username.startsWith("MISSING")) {
     emit uploadMessage("username not set, exiting");
+    return;
+  }
+  if (server_ip == "" || server_ip.startsWith("MISSING")) {
+    emit uploadMessage("server_ip not set, exiting");
+    return;
+  }
+  if (server_path == "" || server_path.startsWith("MISSING")) {
+    emit uploadMessage("server_path not set, exiting");
     return;
   }
   server_path_user = server_path + "/" + username;
@@ -265,8 +273,11 @@ bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
 
 // ---------------------------------------------------------------------
 
-void UploadThread::setPreferences(const QString &_username) {
-  username = _username;
+void UploadThread::setPreferences(const QString &_un, const QString &_ip,
+				  const QString &_sp) {
+  username  = _un;
+  server_ip = _ip;
+  server_path = _sp;
 }
 
 // ---------------------------------------------------------------------

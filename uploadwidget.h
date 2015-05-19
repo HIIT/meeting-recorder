@@ -31,6 +31,8 @@ public:
 
 private:
     QString username();
+    QString server_ip();
+    QString server_path();
 
     UploadThread *uploader;
     QPlainTextEdit *txt;
