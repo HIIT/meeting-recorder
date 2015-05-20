@@ -91,11 +91,6 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   }
   emit uploadMessage(fp);
 
-  QString pubkey = QDir::homePath()+"/.ssh/id_rsa.pub";
-  QString prikey = QDir::homePath()+"/.ssh/id_rsa";
-  emit uploadMessage("using public key: "+ pubkey);
-  emit uploadMessage("using private key: "+ prikey);
-
   LIBSSH2_SFTP *sftp_session;
 
   QDir dir(directory);
@@ -106,7 +101,14 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   LIBSSH2_AGENT* agent = trySshAgent(session);
 
   if (!agent) {
+
   // authentication by public key:
+  emit uploadMessage("no agent found, trying authentication without it");
+  QString pubkey = QDir::homePath()+"/.ssh/id_rsa.pub";
+  QString prikey = QDir::homePath()+"/.ssh/id_rsa";
+  emit uploadMessage("using public key: "+ pubkey);
+  emit uploadMessage("using private key: "+ prikey);
+
   const char *dummypassword="password";
   rc = libssh2_userauth_publickey_fromfile(session, 
 					   username.toStdString().c_str(),
@@ -246,10 +248,15 @@ LIBSSH2_AGENT* UploadThread::trySshAgent(LIBSSH2_SESSION* session) {
       return shutdownAgent(agent);
     }
 
-    if (libssh2_agent_userauth(agent, username.toStdString().c_str(), identity)) {
-      emit uploadMessage(QString("authentication with username %1 and public key %2 failed!").arg(username).arg(identity->comment));
+    if (libssh2_agent_userauth(agent, username.toStdString().c_str(),
+			       identity)) {
+      emit uploadMessage(QString("authentication with username %1 and "
+				 "public key %2 failed")
+			 .arg(username).arg(identity->comment));
     } else {
-      emit uploadMessage(QString("authentication with username %1 and public key %2 succeeded!").arg(username).arg(identity->comment));
+      emit uploadMessage(QString("authentication with username %1 and "
+				 "public key %2 succeeded")
+			 .arg(username).arg(identity->comment));
       break;
     }
     prev_identity = identity;
