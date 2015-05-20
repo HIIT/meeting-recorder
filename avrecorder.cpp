@@ -224,8 +224,14 @@ static QVariant boxValue(const QComboBox *box)
 
 void AvRecorder::toggleRecord()
 {
-    if (!outputLocationSet)
+    if (!outputLocationSet) {
+	QMessageBox msgBox;
+	msgBox.setText("Create target directory first");
+	msgBox.setInformativeText("Before recording, you need to create a directory "
+				  "to store the media files.");
+	msgBox.exec();
         setOutputLocation();
+    }
 
     if (!outputLocationSet)
         return;
