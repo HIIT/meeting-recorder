@@ -34,6 +34,8 @@ public:
 private:
     bool processFile(LIBSSH2_SFTP *, const QString &);
     bool checkDirectory(LIBSSH2_SFTP *, const QString &);
+    LIBSSH2_AGENT * trySshAgent(LIBSSH2_SESSION *);
+    LIBSSH2_AGENT * shutdownAgent(LIBSSH2_AGENT *);
 
     /// local directory to upload
     QString directory;

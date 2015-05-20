@@ -3,3 +3,4 @@ avrecorder
 *.o
 moc_*
 ui_*
+/mrecorder

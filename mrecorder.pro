@@ -27,13 +27,14 @@ macx {
 
 linux-g++* {
      message(Platform: Linux)
-     OPENCVDIR = /home/jmakoske/src/opencv249
-
-     INCLUDEPATH += $$OPENCVDIR/include
-     LIBS += $$OPENCVDIR/lib/libopencv_core.so
-     LIBS += $$OPENCVDIR/lib/libopencv_highgui.so
-     LIBS += $$OPENCVDIR/lib/libopencv_imgproc.so
-     LIBS += /usr/lib/x86_64-linux-gnu/libssh2.so.1
+    #OPENCVDIR = /home/jmakoske/src/opencv249
+    #
+    #INCLUDEPATH += $$OPENCVDIR/include
+    #LIBS += $$OPENCVDIR/lib/libopencv_core.so
+    #LIBS += $$OPENCVDIR/lib/libopencv_highgui.so
+    #LIBS += $$OPENCVDIR/lib/libopencv_imgproc.so
+    #LIBS += /usr/lib/x86_64-linux-gnu/libssh2.so.1
+    LIBS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lssh2
 }
 
 QT += multimedia

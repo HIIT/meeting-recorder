@@ -103,14 +103,19 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   QStringList files = dir.entryList();
   long long totalsize = 0;
 
+  LIBSSH2_AGENT* agent = trySshAgent(session);
+
+  if (!agent) {
   // authentication by public key:
   const char *dummypassword="password";
-  if (libssh2_userauth_publickey_fromfile(session, 
-					  username.toStdString().c_str(),
-					  pubkey.toStdString().c_str(),
-					  prikey.toStdString().c_str(),
-					  dummypassword)) {
-    emit uploadMessage("authentication by public key failed");
+  rc = libssh2_userauth_publickey_fromfile(session, 
+					   username.toStdString().c_str(),
+					   pubkey.toStdString().c_str(),
+					   prikey.toStdString().c_str(),
+					   dummypassword);
+
+  if (rc) {
+    emit uploadMessage(QString("authentication by public key failed: %1").arg(rc));
 
     //authentication via password
     mutex.lock();
@@ -131,6 +136,7 @@ void UploadThread::run() Q_DECL_OVERRIDE {
 
   } else
     emit uploadMessage("authentication by public key successful");
+  }
 
   emit uploadMessage("libssh2_sftp_init()!");
   sftp_session = libssh2_sftp_init(session);
@@ -158,6 +164,9 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   libssh2_sftp_shutdown(sftp_session);
 
 shutdown:
+  if (agent)
+    shutdownAgent(agent);
+
   libssh2_session_disconnect(session,
 			     "Normal Shutdown, Thank you for playing");
   libssh2_session_free(session);
@@ -197,6 +206,65 @@ bool UploadThread::checkDirectory(LIBSSH2_SFTP *sftp_session,
     emit uploadMessage(QString("server path %1 exists").arg(dir));
 
   return true;
+}
+
+// ---------------------------------------------------------------------
+
+// Connect to the ssh-agent 
+LIBSSH2_AGENT* UploadThread::trySshAgent(LIBSSH2_SESSION* session) {
+  int rc = 0;
+  LIBSSH2_AGENT *agent = libssh2_agent_init(session);
+
+  if (!agent) {
+    emit uploadMessage("failure initializing ssh-agent support");
+    rc = 1;
+    return shutdownAgent(agent);
+  }
+
+  if (libssh2_agent_connect(agent)) {
+    emit uploadMessage("failure connecting to ssh-agent");
+    rc = 1;
+    return shutdownAgent(agent);
+  }
+
+  if (libssh2_agent_list_identities(agent)) {
+    emit uploadMessage("failure requesting identities to ssh-agent");
+    rc = 1;
+    return shutdownAgent(agent);
+  }
+
+  struct libssh2_agent_publickey *identity, *prev_identity = NULL;
+  while (1) {
+    rc = libssh2_agent_get_identity(agent, &identity, prev_identity);
+
+    if (rc == 1)
+      break;
+
+    if (rc < 0) {
+      emit uploadMessage("failure obtaining identity from ssh-agent support");
+      rc = 1;
+      return shutdownAgent(agent);
+    }
+
+    if (libssh2_agent_userauth(agent, username.toStdString().c_str(), identity)) {
+      emit uploadMessage(QString("authentication with username %1 and public key %2 failed!").arg(username).arg(identity->comment));
+    } else {
+      emit uploadMessage(QString("authentication with username %1 and public key %2 succeeded!").arg(username).arg(identity->comment));
+      break;
+    }
+    prev_identity = identity;
+  }
+
+  return agent;
+}
+
+//------------------------------------------------------------------------------
+
+LIBSSH2_AGENT* UploadThread::shutdownAgent(LIBSSH2_AGENT* agent) {
+    libssh2_agent_disconnect(agent);
+    libssh2_agent_free(agent);
+
+    return NULL;
 }
 
 // ---------------------------------------------------------------------
