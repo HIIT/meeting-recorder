@@ -14,7 +14,7 @@
 UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent) 
 {
 
-    resize(700,500);
+    resize(800,500);
 
     txt = new QPlainTextEdit();
     txt->setPlainText("UploadWidget() started");
@@ -24,9 +24,10 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
 
     if (!settings.contains("username"))
 	preferences_new();
-    else
-	appendText("using username: " + username() + " server_ip:" + server_ip()
-		   + " server_path:" + server_path());
+    else {
+	appendText("using username: " + username() + ", server_ip:" + server_ip());
+	appendText("using server_path:" + server_path());
+    }
 
     QPushButton *prefButton = new QPushButton("Preferences");
     prefButton->setAutoDefault(false);
