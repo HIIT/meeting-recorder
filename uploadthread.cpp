@@ -25,7 +25,7 @@ UploadThread::UploadThread(QString _dir) : directory(_dir)
 // ---------------------------------------------------------------------
 
 void UploadThread::run() Q_DECL_OVERRIDE {
-  emit uploadMessage("UploadThread::run() starting");
+  emit uploadMessage("uploadthread starting");
 
   if (username == "" || username.startsWith("MISSING")) {
     emit uploadMessage("username not set, exiting");
@@ -178,7 +178,7 @@ shutdown:
 
   libssh2_exit();
 
-  emit uploadMessage("UploadThread::run() ending");
+  emit uploadMessage("uploadthread ending");
 }
 
 // ---------------------------------------------------------------------

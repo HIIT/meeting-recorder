@@ -17,7 +17,8 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
     resize(800,500);
 
     txt = new QPlainTextEdit();
-    txt->setPlainText("UploadWidget() started");
+    txt->setReadOnly(true);
+    txt->setPlainText("uploadwidget started");
 
     pbar_value = 0;
     pbar = new QProgressBar();
