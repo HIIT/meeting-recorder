@@ -1,6 +1,6 @@
 # meeting-recorder
 
-A Qt/OpenCV-based webcam and audio recorder.  Supports up to two simultaneous cameras and writes video immediately to disk. 
+A Qt/OpenCV-based webcam and audio recorder.  Supports up to two simultaneous cameras and writes video immediately to disk. Recorded files can be directly uploaded to server with SFTP. 
 
 ## Requirements
 
