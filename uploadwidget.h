@@ -2,6 +2,7 @@
 #define UPLOADWIDGET_H
 
 #include <QDialog>
+#include <QCheckBox>
 #include <QPlainTextEdit>
 #include <QProgressBar>
 #include <QPushButton>
@@ -25,6 +26,7 @@ public slots:
     void startUpload();
     void uploadOK();
     void passwordWidget();
+    void showHideDetails(int);
 
 public:
     UploadWidget(QWidget *parent, QString _directory);
@@ -35,6 +37,7 @@ private:
     QString server_path();
 
     UploadThread *uploader;
+    QCheckBox *showtxt;
     QPlainTextEdit *txt;
     QProgressBar *pbar;
     int pbar_value;

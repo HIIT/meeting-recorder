@@ -14,11 +14,15 @@
 UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent) 
 {
 
-    resize(800,500);
+    resize(800,250);
+
+    showtxt = new QCheckBox("Show details", this);
+    connect(showtxt, SIGNAL(stateChanged(int)), this, SLOT(showHideDetails(int)));
 
     txt = new QPlainTextEdit();
     txt->setReadOnly(true);
     txt->setPlainText("uploadwidget started");
+    txt->hide();
 
     pbar_value = 0;
     pbar = new QProgressBar();
@@ -46,13 +50,9 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
     connect(startButton, SIGNAL(released()), this, SLOT(startUpload()));
     connect(exitButton, SIGNAL(released()), this, SLOT(reject()));
 
-    // QDialogButtonBox *bb = new QDialogButtonBox(QDialogButtonBox::Ok
-    // 						| QDialogButtonBox::Cancel);
-    
-    // connect(bb, SIGNAL(accepted()), this, SLOT(accept()));
-    // connect(bb, SIGNAL(rejected()), this, SLOT(reject()));
-
     QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(showtxt);
+    layout->addStretch(0);
     layout->addWidget(txt);
     layout->addWidget(pbar);
     layout->addWidget(bb);
@@ -199,6 +199,15 @@ void UploadWidget::passwordWidget() {
     else
 	emit passwordEntered("");
 
+}
+
+// ---------------------------------------------------------------------
+
+void UploadWidget::showHideDetails(int state) {
+    if (state)
+	txt->show();
+    else
+	txt->hide();
 }
 
 // ---------------------------------------------------------------------
