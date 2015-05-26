@@ -226,6 +226,7 @@ void AvRecorder::toggleRecord()
 {
     if (!outputLocationSet) {
 	QMessageBox msgBox;
+	msgBox.setWindowTitle("Re:Know Meeting recorder");
 	msgBox.setText("Create target directory first");
 	msgBox.setInformativeText("Before recording, you need to create a directory "
 				  "to store the media files.");
@@ -296,6 +297,7 @@ void AvRecorder::upload()
     int totalsize = (wavFile.size()+ca1File.size()+ca2File.size())/1024/1024;
 
     QMessageBox msgBox;
+    msgBox.setWindowTitle("Re:Know Meeting recorder");
     msgBox.setText(QString("About to upload meeting data from %1 (%2 MB).")
 		   .arg(dirName).arg(totalsize));
     msgBox.setInformativeText("Do you want to start the upload process?");
@@ -324,11 +326,15 @@ void AvRecorder::setOutputLocation()
     dirName = QFileDialog::getExistingDirectory(this, "Select or create a meeting",
 						defaultDir,
                                                 QFileDialog::ShowDirsOnly);
-    ui->statusbar->showMessage("Output directory: "+dirName);
-    audioRecorder->setOutputLocation(dirName+"/audio.wav");
-    emit outputDirectory(dirName);
-    //audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
-    outputLocationSet = true;
+     if (!dirName.isNull() && !dirName.isEmpty()) {
+	ui->statusbar->showMessage("Output directory: "+dirName);
+	audioRecorder->setOutputLocation(dirName+"/audio.wav");
+	emit outputDirectory(dirName);
+	//audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
+	outputLocationSet = true;
+    } else
+	outputLocationSet = false;
+
 }
 
 void AvRecorder::displayErrorMessage() {
