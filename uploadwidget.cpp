@@ -14,8 +14,10 @@
 UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent) 
 {
 
+    setWindowTitle("Re:Know Meeting recorder file upload");
     resize(800,250);
 
+    QLabel *hint = new QLabel("Press \"Start\" to begin uploading.", this);
     showtxt = new QCheckBox("Show details", this);
     connect(showtxt, SIGNAL(stateChanged(int)), this, SLOT(showHideDetails(int)));
 
@@ -51,6 +53,7 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
     connect(exitButton, SIGNAL(released()), this, SLOT(reject()));
 
     QVBoxLayout *layout = new QVBoxLayout;
+    layout->addWidget(hint);
     layout->addWidget(showtxt);
     layout->addStretch(0);
     layout->addWidget(txt);
@@ -116,6 +119,7 @@ void UploadWidget::preferences() {
 
 void UploadWidget::preferences_new() {
     QDialog *prefs = new QDialog(this);
+    prefs->setWindowTitle("Re:Know Meeting recorder preferences");
     prefs->resize(750,200);
 
     QString un = settings.value("username", "").toString();
