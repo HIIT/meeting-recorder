@@ -102,6 +102,10 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 	qDebug() << "Camera" << idx << "stopping";
 	break;
       }
+
+      // Happens when Stop was pressed:
+      if (!record_video && video.isOpened())
+	  video.release();
       
       // wait for X microseconds until 1second/framerate time has passed after previous frame write
       while(td.total_microseconds() < 1000000/framerate){
@@ -132,10 +136,8 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 		  Scalar(255,255,255));
 	  
 	  // Save frame to video
-	  if (record_video) {
-	    if (video.isOpened())
+	  if (record_video && video.isOpened())
 	      video << frame;
-	  }
 	  
 	  Mat window;
 	  resize(frame, window, Size(240,135));
@@ -204,7 +206,6 @@ void CameraThread::onStateChanged(QMediaRecorder::State state) {
         break;
     case QMediaRecorder::StoppedState:
         record_video = false;
-        video.release();
         break;
     }
 }
