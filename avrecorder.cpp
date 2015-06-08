@@ -45,6 +45,7 @@
 #include <QMediaRecorder>
 #include <QHostInfo>
 #include <QMessageBox>
+#include <QShortcut>
 #include <QDebug>
 
 #include "avrecorder.h"
@@ -141,7 +142,18 @@ AvRecorder::AvRecorder(QWidget *parent) :
             SLOT(displayErrorMessage()));
 
     defaultDir = QDir::homePath() + "/Meetings";
-    dirName = "";
+    dirName = ".";
+
+    QShortcut *anno1 = new QShortcut(QKeySequence(QKeySequence::MoveToPreviousChar),
+				     this);
+    QShortcut *anno2 = new QShortcut(QKeySequence(QKeySequence::MoveToNextLine),
+				     this);
+    QShortcut *anno3 = new QShortcut(QKeySequence(QKeySequence::MoveToNextChar),
+				     this);
+    connect(anno1, SIGNAL(activated()), this, SLOT(setAnnotationTo1()));
+    connect(anno2, SIGNAL(activated()), this, SLOT(setAnnotationTo2()));
+    connect(anno3, SIGNAL(activated()), this, SLOT(setAnnotationTo3()));
+
 }
 
 AvRecorder::~AvRecorder()
@@ -514,6 +526,40 @@ void AvRecorder::setCamera0State(int state) {
 void AvRecorder::setCamera1State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
     emit cameraStateChanged(1, state);
+}
+
+void AvRecorder::setAnnotationTo1() {
+    ui->annoButton_1->setChecked(true);
+    ui->annoButton_2->setChecked(false);
+    ui->annoButton_3->setChecked(false);
+    setAnnotation(1);
+}
+
+void AvRecorder::setAnnotationTo2() {
+    ui->annoButton_1->setChecked(false);
+    ui->annoButton_2->setChecked(true);
+    ui->annoButton_3->setChecked(false);
+    setAnnotation(2);
+}
+
+void AvRecorder::setAnnotationTo3() {
+    ui->annoButton_1->setChecked(false);
+    ui->annoButton_2->setChecked(false);
+    ui->annoButton_3->setChecked(true);
+    setAnnotation(3);
+}
+
+void AvRecorder::setAnnotation(int anno) {
+    qDebug() << "Annotation set to" << anno;
+    QDateTime now = QDateTime::currentDateTime();
+
+    QFile annofile(dirName+"/annotations.txt");
+    if (annofile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text)) {
+	QTextStream out(&annofile);
+	out << anno << " " << now.toString("yyyy-MM-dd'T'hh:mm:sst") << "\n";
+	annofile.close();
+    }
+
 }
 
 // Local Variables:

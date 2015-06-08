@@ -82,6 +82,10 @@ private slots:
     void togglePause();
     void toggleRecord();
 
+    void setAnnotationTo1();
+    void setAnnotationTo2();
+    void setAnnotationTo3();
+
     void setCameraOutput(QString);
     void setCameraFramerate(QString);
     void setCamera0State(int);
@@ -94,6 +98,7 @@ private slots:
 
 private:
     void clearAudioLevels();
+    void setAnnotation(int);
 
     Ui::AvRecorder *ui;
 
