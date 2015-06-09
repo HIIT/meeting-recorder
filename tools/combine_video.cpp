@@ -52,7 +52,9 @@ void help(char** av) {
        << "  [--slideidx=X]         : " 
        << "idx of videos to match slides against, use \"-1\" for none" << endl
        << "  [--fixedslide=X]       : " 
-       << "filename of a fixed slide shown continously" << endl;
+       << "filename of a fixed slide shown continously" << endl
+       << "  [--hr=X]               : " 
+       << "filename of heart rate CSV data to be shown" << endl;
 }
 
 // ----------------------------------------------------------------------
