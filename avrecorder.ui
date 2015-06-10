@@ -6,353 +6,497 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>569</width>
-    <height>480</height>
+    <width>674</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Re:Know Meeting recorder</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>12</x>
-      <y>12</y>
-      <width>562</width>
-      <height>467</height>
-     </rect>
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <property name="bottomMargin">
+     <number>12</number>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <property name="bottomMargin">
-        <number>20</number>
-       </property>
-       <item>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Sample rate:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="audioDeviceBox"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Audio codec:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Audio device:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>File container:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="containerBox"/>
-         </item>
-         <item row="3" column="1">
-          <widget class="QComboBox" name="sampleRateBox"/>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="audioCodecBox"/>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Channels:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QComboBox" name="channelsBox"/>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Encoding Mode:</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <property name="bottomMargin">
+         <number>20</number>
+        </property>
+        <item>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="3" column="0">
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>Sample rate:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="audioDeviceBox"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Audio codec:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Audio device:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_3">
+            <property name="text">
+             <string>File container:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QComboBox" name="containerBox"/>
+          </item>
           <item row="3" column="1">
-           <widget class="QComboBox" name="bitrateBox">
-            <property name="enabled">
-             <bool>false</bool>
+           <widget class="QComboBox" name="sampleRateBox"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QComboBox" name="audioCodecBox"/>
+          </item>
+          <item row="4" column="0">
+           <widget class="QLabel" name="label_5">
+            <property name="text">
+             <string>Channels:</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
-           <widget class="QRadioButton" name="constantBitrateRadioButton">
+          <item row="4" column="1">
+           <widget class="QComboBox" name="channelsBox"/>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>Encoding Mode:</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="3" column="1">
+            <widget class="QComboBox" name="bitrateBox">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QRadioButton" name="constantBitrateRadioButton">
+             <property name="text">
+              <string>Constant Bitrate:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <widget class="QRadioButton" name="constantQualityRadioButton">
+             <property name="text">
+              <string>Constant Quality:</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSlider" name="qualitySlider">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="0">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLabel" name="levelLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
-             <string>Constant Bitrate:</string>
+             <string>Audio level:</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="0" colspan="2">
-           <widget class="QRadioButton" name="constantQualityRadioButton">
-            <property name="text">
-             <string>Constant Quality:</string>
+          <item>
+           <layout class="QVBoxLayout" name="levelsLayout">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMinimumSize</enum>
             </property>
-            <property name="checked">
-             <bool>true</bool>
+           </layout>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Maximum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="groupBox_2">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>80</height>
+           </size>
+          </property>
+          <property name="title">
+           <string>Recording:</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <widget class="QPushButton" name="outputButton">
+             <property name="text">
+              <string>Output...</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="recordButton">
+             <property name="text">
+              <string>Record</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="uploadButton">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Upload</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="rightMargin">
+         <number>20</number>
+        </property>
+        <property name="bottomMargin">
+         <number>20</number>
+        </property>
+        <item>
+         <widget class="QCheckBox" name="camera_label_0">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Camera 0:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="viewfinder_0">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>240</width>
+            <height>135</height>
+           </size>
+          </property>
+          <property name="autoFillBackground">
+           <bool>false</bool>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::Box</enum>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="camera_label_1">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Camera 1:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="viewfinder_1">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>240</width>
+            <height>135</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::Box</enum>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0" columnminimumwidth="0,0">
+          <item row="0" column="1">
+           <widget class="QComboBox" name="cameraOutBox"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Output size:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="label_7">
+            <property name="text">
+             <string>Frame rate:</string>
             </property>
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QSlider" name="qualitySlider">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <spacer name="horizontalSpacer">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="1" column="0">
-           <spacer name="horizontalSpacer_2">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
+           <widget class="QComboBox" name="frameRateBox"/>
           </item>
          </layout>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Maximum</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="eventBox">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>80</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>Events:</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="eventButton_1">
+         <property name="text">
+          <string>Important</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_5">
-         <item>
-          <widget class="QLabel" name="levelLabel">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Audio level:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="levelsLayout">
-           <property name="sizeConstraint">
-            <enum>QLayout::SetMinimumSize</enum>
-           </property>
-          </layout>
-         </item>
-        </layout>
+        <widget class="QPushButton" name="eventButton_2">
+         <property name="text">
+          <string>Positive</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QPushButton" name="eventButton_3">
+         <property name="text">
+          <string>Negative</string>
          </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Maximum</enum>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <item>
-          <widget class="QPushButton" name="outputButton">
-           <property name="text">
-            <string>Output...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="recordButton">
-           <property name="text">
-            <string>Record</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="uploadButton">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Upload</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QPushButton" name="eventButton_4">
+         <property name="text">
+          <string>Boring</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="rightMargin">
-        <number>20</number>
-       </property>
-       <property name="bottomMargin">
-        <number>20</number>
-       </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="statusBox">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>80</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>Status:</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QCheckBox" name="camera_label_0">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+        <widget class="QPushButton" name="statusButton_1">
          <property name="text">
-          <string>Camera 0:</string>
+          <string>Meeting</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="viewfinder_0">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>240</width>
-           <height>135</height>
-          </size>
-         </property>
-         <property name="autoFillBackground">
-          <bool>false</bool>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Box</enum>
-         </property>
+        <widget class="QPushButton" name="statusButton_2">
          <property name="text">
-          <string/>
+          <string>Discussion</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="camera_label_1">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+        <widget class="QPushButton" name="statusButton_3">
          <property name="text">
-          <string>Camera 1:</string>
+          <string>Emails</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="viewfinder_1">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>240</width>
-           <height>135</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Box</enum>
-         </property>
+        <widget class="QPushButton" name="statusButton_4">
          <property name="text">
-          <string/>
+          <string>Reading</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QGridLayout" name="gridLayout_3" columnstretch="0,0" columnminimumwidth="0,0">
-         <item row="0" column="1">
-          <widget class="QComboBox" name="cameraOutBox"/>
-         </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Output size:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Frame rate:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="frameRateBox"/>
-         </item>
-        </layout>
+        <widget class="QPushButton" name="statusButton_5">
+         <property name="text">
+          <string>Writing</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item>
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+        <widget class="QPushButton" name="statusButton_6">
+         <property name="text">
+          <string>Break</string>
          </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Maximum</enum>
+         <property name="checkable">
+          <bool>true</bool>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
       </layout>
-     </item>
-    </layout>
-   </widget>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
@@ -397,8 +541,8 @@
    <slot>setOutputLocation()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>46</x>
-     <y>340</y>
+     <x>48</x>
+     <y>417</y>
     </hint>
     <hint type="destinationlabel">
      <x>6</x>
@@ -413,8 +557,8 @@
    <slot>toggleRecord()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>191</x>
-     <y>340</y>
+     <x>200</x>
+     <y>417</y>
     </hint>
     <hint type="destinationlabel">
      <x>113</x>
@@ -429,8 +573,8 @@
    <slot>upload()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>252</x>
-     <y>334</y>
+     <x>289</x>
+     <y>417</y>
     </hint>
     <hint type="destinationlabel">
      <x>258</x>
@@ -445,8 +589,8 @@
    <slot>setCameraOutput(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>472</x>
-     <y>364</y>
+     <x>640</x>
+     <y>377</y>
     </hint>
     <hint type="destinationlabel">
      <x>284</x>
@@ -461,8 +605,8 @@
    <slot>setCameraFramerate(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>472</x>
-     <y>394</y>
+     <x>640</x>
+     <y>407</y>
     </hint>
     <hint type="destinationlabel">
      <x>284</x>
@@ -502,6 +646,166 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>statusButton_1</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setStatusTo1()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>123</x>
+     <y>569</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>287</x>
+     <y>270</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>statusButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setStatusTo2()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>233</x>
+     <y>569</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>287</x>
+     <y>270</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>statusButton_3</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setStatusTo3()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>338</x>
+     <y>569</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>287</x>
+     <y>270</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>statusButton_4</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setStatusTo4()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>391</x>
+     <y>553</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>statusButton_5</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setStatusTo5()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>496</x>
+     <y>553</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>statusButton_6</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setStatusTo6()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>601</x>
+     <y>553</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>eventButton_1</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>event1()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>99</x>
+     <y>484</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>eventButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>event2()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>257</x>
+     <y>484</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>eventButton_3</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>event3()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>416</x>
+     <y>484</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>eventButton_4</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>event4()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>574</x>
+     <y>484</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>336</x>
+     <y>304</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>setOutputLocation()</slot>
@@ -512,5 +816,15 @@
   <slot>setCamera0State(int)</slot>
   <slot>setCamera1State(int)</slot>
   <slot>upload()</slot>
+  <slot>setStatusTo1()</slot>
+  <slot>setStatusTo2()</slot>
+  <slot>setStatusTo3()</slot>
+  <slot>setStatusTo4()</slot>
+  <slot>setStatusTo5()</slot>
+  <slot>setStatusTo6()</slot>
+  <slot>event1()</slot>
+  <slot>event2()</slot>
+  <slot>event3()</slot>
+  <slot>event4()</slot>
  </slots>
 </ui>

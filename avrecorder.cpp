@@ -38,6 +38,30 @@
 **
 ****************************************************************************/
 
+/*
+  Copyright (c) 2015 University of Helsinki
+
+  Permission is hereby granted, free of charge, to any person
+  obtaining a copy of this software and associated documentation files
+  (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge,
+  publish, distribute, sublicense, and/or sell copies of the Software,
+  and to permit persons to whom the Software is furnished to do so,
+  subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+  BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+  ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+*/
+
 #include <QAudioProbe>
 #include <QAudioRecorder>
 #include <QDir>
@@ -45,6 +69,7 @@
 #include <QMediaRecorder>
 #include <QHostInfo>
 #include <QMessageBox>
+#include <QShortcut>
 #include <QDebug>
 
 #include "avrecorder.h"
@@ -56,11 +81,15 @@
 #include "uploadwidget.h"
 #endif
 
+// ---------------------------------------------------------------------
+
 static qreal getPeakValue(const QAudioFormat &format);
 static QVector<qreal> getBufferLevels(const QAudioBuffer &buffer);
 
 template <class T>
 static QVector<qreal> getBufferLevels(const T *buffer, int frames, int channels);
+
+// ---------------------------------------------------------------------
 
 AvRecorder::AvRecorder(QWidget *parent) :
     QMainWindow(parent),
@@ -143,14 +172,33 @@ AvRecorder::AvRecorder(QWidget *parent) :
             SLOT(displayErrorMessage()));
 
     defaultDir = QDir::homePath() + "/Meetings";
-    dirName = "";
+    dirName = ".";
+
+    setStatus(1);
+
+    /*
+    QShortcut *anno1 = new QShortcut(QKeySequence(QKeySequence::MoveToPreviousChar),
+				     this);
+    QShortcut *anno2 = new QShortcut(QKeySequence(QKeySequence::MoveToNextLine),
+				     this);
+    QShortcut *anno3 = new QShortcut(QKeySequence(QKeySequence::MoveToNextChar),
+				     this);
+    connect(anno1, SIGNAL(activated()), this, SLOT(setAnnotationTo1()));
+    connect(anno2, SIGNAL(activated()), this, SLOT(setAnnotationTo2()));
+    connect(anno3, SIGNAL(activated()), this, SLOT(setAnnotationTo3()));
+    */
+
 }
+
+// ---------------------------------------------------------------------
 
 AvRecorder::~AvRecorder()
 {
     delete audioRecorder;
     delete probe;
 }
+
+// ---------------------------------------------------------------------
 
 void AvRecorder::updateProgress(qint64 duration)
 {
@@ -168,6 +216,8 @@ void AvRecorder::updateProgress(qint64 duration)
                                .arg(ca1File.size()/1024/1024)
                                .arg(ca2File.size()/1024/1024));
 }
+
+// ---------------------------------------------------------------------
 
 void AvRecorder::updateStatus(QMediaRecorder::Status status)
 {
@@ -193,6 +243,8 @@ void AvRecorder::updateStatus(QMediaRecorder::Status status)
         ui->statusbar->showMessage(statusMessage);
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::onStateChanged(QMediaRecorder::State state)
 {
     switch (state) {
@@ -215,6 +267,8 @@ void AvRecorder::onStateChanged(QMediaRecorder::State state)
     emit stateChanged(state);
 }
 
+// ---------------------------------------------------------------------
+
 static QVariant boxValue(const QComboBox *box)
 {
     int idx = box->currentIndex();
@@ -223,6 +277,8 @@ static QVariant boxValue(const QComboBox *box)
 
     return box->itemData(idx);
 }
+
+// ---------------------------------------------------------------------
 
 void AvRecorder::toggleRecord()
 {
@@ -277,6 +333,8 @@ void AvRecorder::toggleRecord()
     }
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::togglePause()
 {
     if (audioRecorder->state() != QMediaRecorder::PausedState)
@@ -284,6 +342,8 @@ void AvRecorder::togglePause()
     else
         audioRecorder->record();
 }
+
+// ---------------------------------------------------------------------
 
 void AvRecorder::upload()
 {
@@ -325,6 +385,8 @@ void AvRecorder::upload()
 
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::setOutputLocation()
 {
     QDir dir(defaultDir);
@@ -350,6 +412,8 @@ void AvRecorder::setOutputLocation()
 
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::displayErrorMessage() {
     ui->statusbar->showMessage(audioRecorder->errorString());
 }
@@ -358,11 +422,15 @@ void AvRecorder::displayErrorMessage(const QString &e) {
     ui->statusbar->showMessage(e);
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::clearAudioLevels()
 {
     for (int i = 0; i < audioLevels.size(); ++i)
         audioLevels.at(i)->setLevel(0);
 }
+
+// ---------------------------------------------------------------------
 
 // This function returns the maximum possible sample value for a given audio format
 qreal getPeakValue(const QAudioFormat& format)
@@ -401,6 +469,8 @@ qreal getPeakValue(const QAudioFormat& format)
 
     return qreal(0);
 }
+
+// ---------------------------------------------------------------------
 
 // returns the audio level for each channel
 QVector<qreal> getBufferLevels(const QAudioBuffer& buffer)
@@ -453,6 +523,8 @@ QVector<qreal> getBufferLevels(const QAudioBuffer& buffer)
     return values;
 }
 
+// ---------------------------------------------------------------------
+
 template <class T>
 QVector<qreal> getBufferLevels(const T *buffer, int frames, int channels)
 {
@@ -469,6 +541,8 @@ QVector<qreal> getBufferLevels(const T *buffer, int frames, int channels)
 
     return max_values;
 }
+
+// ---------------------------------------------------------------------
 
 void AvRecorder::processBuffer(const QAudioBuffer& buffer)
 {
@@ -487,6 +561,8 @@ void AvRecorder::processBuffer(const QAudioBuffer& buffer)
         audioLevels.at(i)->setLevel(levels.at(i));
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::processQImage(int n, const QImage qimg)
 {
     //qDebug() << "processQImage(): n=" << n;
@@ -499,6 +575,8 @@ void AvRecorder::processQImage(int n, const QImage qimg)
     }
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::processCameraInfo(int n, int w, int h)
 {
     if (n==0) {
@@ -510,14 +588,20 @@ void AvRecorder::processCameraInfo(int n, int w, int h)
     }
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::setCameraOutput(QString wxh) {
     //qDebug() << "setCameraOutput(): idx=" << idx;
     emit cameraOutput(wxh);
 }
 
+// ---------------------------------------------------------------------
+
 void AvRecorder::setCameraFramerate(QString fps) {
     emit cameraFramerate(fps);
 }
+
+// ---------------------------------------------------------------------
 
 void AvRecorder::setCamera0State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
@@ -528,6 +612,88 @@ void AvRecorder::setCamera1State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
     emit cameraStateChanged(1, state);
 }
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::writeAnnotation(int anno, const QString &fn) {
+    QDateTime now = QDateTime::currentDateTime();
+    QFile annofile(dirName+"/"+fn);
+    if (annofile.open(QIODevice::WriteOnly | QIODevice::Append |
+		      QIODevice::Text)) {
+	QTextStream out(&annofile);
+	out << anno << " " << now.toString("yyyy-MM-dd'T'hh:mm:sst")
+	    << "\n";
+	annofile.close();
+    }
+}
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::setStatusTo1() { setStatus(1); }
+void AvRecorder::setStatusTo2() { setStatus(2); }
+void AvRecorder::setStatusTo3() { setStatus(3); }
+void AvRecorder::setStatusTo4() { setStatus(4); }
+void AvRecorder::setStatusTo5() { setStatus(5); }
+void AvRecorder::setStatusTo6() { setStatus(6); }
+
+void AvRecorder::setStatus(int status) {
+    qDebug() << "Status set to" << status;
+    ui->statusButton_1->setChecked(status==1);
+    ui->statusButton_2->setChecked(status==2);
+    ui->statusButton_3->setChecked(status==3);
+    ui->statusButton_4->setChecked(status==4);
+    ui->statusButton_5->setChecked(status==5);
+    ui->statusButton_6->setChecked(status==6);
+
+    writeAnnotation(status, "status.txt");
+}
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::event1() { handleEvent(1); }
+void AvRecorder::event2() { handleEvent(2); }
+void AvRecorder::event3() { handleEvent(3); }
+void AvRecorder::event4() { handleEvent(4); }
+
+void AvRecorder::handleEvent(int ev) {
+    switch (ev) {
+    case 1:
+	ui->eventButton_1->setChecked(true);
+	QTimer::singleShot(2000, this, SLOT(uncheckEvent1()));
+	break;
+    case 2:
+	ui->eventButton_2->setChecked(true);
+	QTimer::singleShot(2000, this, SLOT(uncheckEvent2()));
+	break;
+    case 3:
+	ui->eventButton_3->setChecked(true);
+	QTimer::singleShot(2000, this, SLOT(uncheckEvent3()));
+	break;
+    case 4:
+	ui->eventButton_4->setChecked(true);
+	QTimer::singleShot(2000, this, SLOT(uncheckEvent4()));
+	break;
+    }
+    writeAnnotation(ev, "events.txt");
+}
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::uncheckEvent1() {
+    ui->eventButton_1->setChecked(false);
+}
+void AvRecorder::uncheckEvent2() {
+    ui->eventButton_2->setChecked(false);
+}
+void AvRecorder::uncheckEvent3() {
+    ui->eventButton_3->setChecked(false);
+}
+void AvRecorder::uncheckEvent4() {
+    ui->eventButton_4->setChecked(false);
+}
+
+// ---------------------------------------------------------------------
+
 
 // Local Variables:
 // c-basic-offset: 4
