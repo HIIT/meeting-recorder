@@ -70,6 +70,7 @@
 #include <QHostInfo>
 #include <QMessageBox>
 #include <QShortcut>
+#include <QTimer>
 #include <QDebug>
 
 #include "avrecorder.h"
