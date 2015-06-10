@@ -8,6 +8,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <MediaInfo/MediaInfo.h>
 
@@ -33,6 +34,10 @@ struct capturestruct {
 
 // ----------------------------------------------------------------------
 
+time_t calc_epoch_timestring(const string&, bool = true);
+
+// ----------------------------------------------------------------------
+
 void help(char** av) {
   cout << "Usage:" << endl << av[0] 
        << " [options] idx:videofile [idx:videofile ...] " << endl << endl
@@ -47,7 +52,9 @@ void help(char** av) {
        << "  [--slideidx=X]         : " 
        << "idx of videos to match slides against, use \"-1\" for none" << endl
        << "  [--fixedslide=X]       : " 
-       << "filename of a fixed slide shown continously" << endl;
+       << "filename of a fixed slide shown continously" << endl
+       << "  [--hr=X]               : " 
+       << "filename of heart rate CSV data to be shown" << endl;
 }
 
 // ----------------------------------------------------------------------
@@ -110,8 +117,14 @@ time_t calc_epoch(const string &fn) {
 
   }
 
-  boost::replace_first(timestring, "T", " ");
+  return calc_epoch_timestring(timestring);
+}
 
+// ----------------------------------------------------------------------
+
+time_t calc_epoch_timestring(const string &_timestring, bool verbose) {
+
+  string timestring = _timestring;
   string timezone;
   int tzinsecs = 0;
 
@@ -127,7 +140,8 @@ time_t calc_epoch(const string &fn) {
     vector<string> tmp;  
     boost::split(tmp, timestring, boost::is_any_of("+"));
     if (tmp.size()<2) {
-      cerr << "ERROR:  Time zone missing from timestring" << endl;
+      cerr << "ERROR:  Time zone missing from timestring [" 
+	   << timestring << "]" << endl;
       return 0;
     }
     timestring = tmp.at(0);
@@ -142,9 +156,12 @@ time_t calc_epoch(const string &fn) {
     }
   }
 
-  cout << "Final timestring=[" << timestring << "] tz=[" << timezone 
-       << "] tzinsecs=[" << tzinsecs << "]" 
-       << endl;
+  boost::replace_first(timestring, "T", " ");
+
+  if (verbose)
+    cout << "Final timestring=[" << timestring << "] tz=[" << timezone 
+	 << "] tzinsecs=[" << tzinsecs << "]" 
+	 << endl;
 
   boost::posix_time::ptime t(boost::posix_time::time_from_string(timestring));
   boost::posix_time::ptime start(boost::gregorian::date(1970,1,1)); 
@@ -164,6 +181,45 @@ string timedatestr(time_t epoch) {
 
 // ----------------------------------------------------------------------
 
+bool process_hr(string fn, map<time_t, double> &data) {
+
+  ifstream hrfile(fn);
+  if (!hrfile) {
+    cerr << "ERROR: HR data file not found [" << fn << "]" << endl;
+    return false;
+  }
+  
+  string line;
+  double hr_value;
+  time_t hr_ts;
+  bool first = true;
+  while (getline(hrfile, line)) {
+    if (first) {
+      first = false;
+      continue;
+    }
+    //cout << line << endl;
+    vector<string> parts;
+    boost::split(parts, line, boost::is_any_of(";"));
+   
+    if (parts.size() != 6) {
+      cerr << "ERROR: Unable to parse [" << line << "]" << endl;
+      return false;
+    }    
+
+
+    hr_value = atof(parts.at(2).c_str());
+    string ts = parts.at(5) + "EEST";
+    hr_ts = calc_epoch_timestring(ts.c_str(), false);
+    //cout << hr_ts << " : " << hr_value << endl;
+    data[hr_ts] = hr_value;
+  }
+
+  return true;
+}
+
+// ----------------------------------------------------------------------
+
 int main(int ac, char** av) {
 
   if (ac <= 1) {
@@ -176,6 +232,7 @@ int main(int ac, char** av) {
   vector<capturestruct> captures;
   bool write_video = false;
   string outputfn = "output.avi", slidedir = ".", fixedslidefn = "";
+  map<time_t, double> hr;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -200,6 +257,10 @@ int main(int ac, char** av) {
 
     } else if (boost::starts_with(arg, "--slideidx=") && arg.size()>11) {
       slideidx = atoi(arg.substr(11).c_str());
+      continue;
+
+    } else if (boost::starts_with(arg, "--hr=") && arg.size()>5) {
+      process_hr(arg.substr(5), hr);
       continue;
     }
 
@@ -349,6 +410,8 @@ int main(int ac, char** av) {
 
   map<string, Mat> slides;
 
+  double hrvalue = -1.0;
+
   size_t nframe = 0;
 
   int nf = 1;
@@ -441,7 +504,19 @@ int main(int ac, char** av) {
     putText(frame, current_time.c_str(),
 	    Point(frame.cols-250,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0,
 	    Scalar(255,255,255));
-    
+
+    if (hr.find(current_epoch) != hr.end()) {
+      hrvalue = hr[current_epoch];
+      //cout << "Setting HR to: " << hrvalue << endl;
+    }
+    if (hrvalue > 0.0) {
+      std::string hrstr = boost::lexical_cast<std::string>(round(hrvalue));
+      putText(frame, hrstr.c_str(),
+	      Point(frame.cols-150,frame.rows-50), FONT_HERSHEY_PLAIN, 5.0,
+	      Scalar(0,0,255), 8);
+    }
+      
+
     if (write_video) {
       video << frame;
 
