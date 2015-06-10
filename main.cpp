@@ -78,6 +78,8 @@ int main(int argc, char *argv[])
     if (res)
       qWarning() << "WARNING: /usr/bin/v4l2-ctl not found or failed. "
 		 << "This may cause problems";
+#elif defined(Q_OS_WIN)
+    qDebug() << "Running on Windows";
 #else
     qWarning() << "Unknown operating system";
 #endif

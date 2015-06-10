@@ -37,23 +37,43 @@ linux-g++* {
     LIBS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lssh2
 }
 
+win32 {
+    message(Platform: Win32)
+    OPENCVDIR = C:\Users\localadmin_jmakoske\opencv\build
+    BOOSTDIR  = C:\Users\localadmin_jmakoske\boost_1_58_0
+
+    INCLUDEPATH += $$OPENCVDIR\include
+    INCLUDEPATH += $$BOOSTDIR
+
+    LIBS += -L$$OPENCVDIR\x86\mingw\bin
+    LIBS += -lopencv_core2411 -lopencv_highgui2411 -lopencv_imgproc2411
+}
+
 QT += multimedia
 QT += widgets
 
 HEADERS = \
     avrecorder.h \
     qaudiolevel.h \
-    camerathread.h \
-    uploadwidget.h \
-    uploadthread.h
+    camerathread.h
+
+!win32 {
+    HEADERS += \
+        uploadwidget.h \
+        uploadthread.h
+}
 
 SOURCES = \
     main.cpp \
     avrecorder.cpp \
     qaudiolevel.cpp \
-    camerathread.cpp \
-    uploadwidget.cpp \
-    uploadthread.cpp
+    camerathread.cpp
+
+!win32 {
+    HEADERS += \
+        uploadwidget.cpp \
+        uploadthread.cpp
+}
 
 FORMS += avrecorder.ui
 

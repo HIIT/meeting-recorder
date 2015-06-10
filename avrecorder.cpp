@@ -52,7 +52,9 @@
 
 #include "ui_avrecorder.h"
 
+#if !defined(Q_OS_WIN)
 #include "uploadwidget.h"
+#endif
 
 static qreal getPeakValue(const QAudioFormat &format);
 static QVector<qreal> getBufferLevels(const QAudioBuffer &buffer);
@@ -298,19 +300,30 @@ void AvRecorder::upload()
 
     QMessageBox msgBox;
     msgBox.setWindowTitle("Re:Know Meeting recorder");
-    msgBox.setText(QString("About to upload meeting data from %1 (%2 MB).")
-		   .arg(dirName).arg(totalsize));
-    msgBox.setInformativeText("Do you want to start the upload process?");
     msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     msgBox.setDefaultButton(QMessageBox::Ok);
 
+#if defined(Q_OS_WIN)
+
+    msgBox.setText("Upload not supported on Windows.");
+    msgBox.setInformativeText("Data upload is currently not supported on Windows. "
+                              "Please use some alternative way to send the data.");
+    msgBox.exec();
+
+#else
+
+    msgBox.setText(QString("About to upload meeting data from %1 (%2 MB).")
+		   .arg(dirName).arg(totalsize));
+    msgBox.setInformativeText("Do you want to start the upload process?");
+
     int ret = msgBox.exec();
     if (ret == QMessageBox::Ok) {
-	UploadWidget uw(this, dirName);
-	uw.exec();
+      UploadWidget uw(this, dirName);
+      uw.exec();
     }
-}
+#endif
 
+}
 
 void AvRecorder::setOutputLocation()
 {
