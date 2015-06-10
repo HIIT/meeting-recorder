@@ -75,6 +75,10 @@ public slots:
     void processQImage(int n, const QImage qimg);
     void processCameraInfo(int, int, int);
     void displayErrorMessage(const QString&);
+    void uncheckEvent1();
+    void uncheckEvent2();
+    void uncheckEvent3();
+    void uncheckEvent4();
 
 private slots:
     void setOutputLocation();
@@ -82,9 +86,17 @@ private slots:
     void togglePause();
     void toggleRecord();
 
-    void setAnnotationTo1();
-    void setAnnotationTo2();
-    void setAnnotationTo3();
+    void setStatusTo1();
+    void setStatusTo2();
+    void setStatusTo3();
+    void setStatusTo4();
+    void setStatusTo5();
+    void setStatusTo6();
+
+    void event1();
+    void event2();
+    void event3();
+    void event4();
 
     void setCameraOutput(QString);
     void setCameraFramerate(QString);
@@ -98,7 +110,9 @@ private slots:
 
 private:
     void clearAudioLevels();
-    void setAnnotation(int);
+    void setStatus(int);
+    void handleEvent(int);
+    void writeAnnotation(int, const QString &);
 
     Ui::AvRecorder *ui;
 
