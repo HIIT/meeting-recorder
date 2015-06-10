@@ -70,7 +70,7 @@ SOURCES = \
     camerathread.cpp
 
 !win32 {
-    HEADERS += \
+    SOURCES += \
         uploadwidget.cpp \
         uploadthread.cpp
 }
@@ -80,4 +80,7 @@ FORMS += avrecorder.ui
 #target.path = /Users/jmakoske/bin/mrecorder
 #INSTALLS += target
 
+#EVERYTHING = $$SOURCES $$HEADERS
+#message("The project contains the following files:")
+#message($$EVERYTHING)
 
