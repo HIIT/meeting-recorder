@@ -406,7 +406,7 @@ void AvRecorder::setOutputLocation()
                                                 QFileDialog::ShowDirsOnly);
      if (!dirName.isNull() && !dirName.isEmpty()) {
 	ui->statusbar->showMessage("Output directory: "+dirName);
-	audioRecorder->setOutputLocation(dirName+"/audio.wav");
+    audioRecorder->setOutputLocation(QUrl::fromLocalFile(dirName+"/audio.wav"));
 	emit outputDirectory(dirName);
 	//audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
 	outputLocationSet = true;
