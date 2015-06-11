@@ -106,7 +106,12 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     filename = QString("capture%1.avi").arg(idx);
 
     record_video = false;
+
+#if defined(Q_OS_WIN)
+    fourcc = CV_FOURCC('D','I','V','X');
+#else
     fourcc = CV_FOURCC('m','p','4','v');
+#endif
 
     // Note: These need to match the default values in AvRecorder::AvRecorder():
     framerate = 15;
