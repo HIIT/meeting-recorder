@@ -98,6 +98,7 @@ AvRecorder::AvRecorder(QWidget *parent) :
     outputLocationSet(false)
 {
     ui->setupUi(this);
+    resize(0,0);
 
     audioRecorder = new QAudioRecorder(this);
     probe = new QAudioProbe;
@@ -175,7 +176,8 @@ AvRecorder::AvRecorder(QWidget *parent) :
     defaultDir = QDir::homePath() + "/Meetings";
     dirName = ".";
 
-    setStatus(1);
+    setStatus(1, false);
+    setPose(1, false);
 
     /*
     QShortcut *anno1 = new QShortcut(QKeySequence(QKeySequence::MoveToPreviousChar),
@@ -617,6 +619,16 @@ void AvRecorder::setCamera1State(int state) {
 // ---------------------------------------------------------------------
 
 void AvRecorder::writeAnnotation(int anno, const QString &fn) {
+    if (!outputLocationSet) {
+	QMessageBox msgBox;
+	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setText("Create target directory first");
+	msgBox.setInformativeText("Before annotation, you need to create a directory "
+				  "to store the annotations.");
+	msgBox.exec();
+        setOutputLocation();
+    }
+
     QDateTime now = QDateTime::currentDateTime();
     QFile annofile(dirName+"/"+fn);
     if (annofile.open(QIODevice::WriteOnly | QIODevice::Append |
@@ -637,8 +649,8 @@ void AvRecorder::setStatusTo4() { setStatus(4); }
 void AvRecorder::setStatusTo5() { setStatus(5); }
 void AvRecorder::setStatusTo6() { setStatus(6); }
 
-void AvRecorder::setStatus(int status) {
-    qDebug() << "Status set to" << status;
+void AvRecorder::setStatus(int status, bool write) {
+    qDebug() << "Status set to:" << status;
     ui->statusButton_1->setChecked(status==1);
     ui->statusButton_2->setChecked(status==2);
     ui->statusButton_3->setChecked(status==3);
@@ -646,7 +658,22 @@ void AvRecorder::setStatus(int status) {
     ui->statusButton_5->setChecked(status==5);
     ui->statusButton_6->setChecked(status==6);
 
-    writeAnnotation(status, "status.txt");
+    if (write)
+	writeAnnotation(status, "status.txt");
+}
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::setPoseTo1() { setPose(1); }
+void AvRecorder::setPoseTo2() { setPose(2); }
+
+void AvRecorder::setPose(int pose, bool write) {
+    qDebug() << "Pose set to:" << pose;
+    ui->poseButton_1->setChecked(pose==1);
+    ui->poseButton_2->setChecked(pose==2);
+
+    if (write)
+	writeAnnotation(pose, "pose.txt");
 }
 
 // ---------------------------------------------------------------------
@@ -657,6 +684,7 @@ void AvRecorder::event3() { handleEvent(3); }
 void AvRecorder::event4() { handleEvent(4); }
 
 void AvRecorder::handleEvent(int ev) {
+    qDebug() << "Event registered:" << ev;
     switch (ev) {
     case 1:
 	ui->eventButton_1->setChecked(true);

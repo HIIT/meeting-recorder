@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>674</width>
-    <height>663</height>
+    <width>642</width>
+    <height>699</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -364,64 +364,6 @@
      </layout>
     </item>
     <item>
-     <widget class="QGroupBox" name="eventBox">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>80</height>
-       </size>
-      </property>
-      <property name="title">
-       <string>Events:</string>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="QPushButton" name="eventButton_1">
-         <property name="text">
-          <string>Important</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="eventButton_2">
-         <property name="text">
-          <string>Positive</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="eventButton_3">
-         <property name="text">
-          <string>Negative</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="eventButton_4">
-         <property name="text">
-          <string>Boring</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="QGroupBox" name="statusBox">
       <property name="minimumSize">
        <size>
@@ -495,6 +437,100 @@
        </item>
       </layout>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QGroupBox" name="poseBox">
+        <property name="title">
+         <string>Pose:</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QPushButton" name="poseButton_1">
+           <property name="text">
+            <string>Sitting</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="poseButton_2">
+           <property name="text">
+            <string>Standing</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="eventBox">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>80</height>
+         </size>
+        </property>
+        <property name="title">
+         <string>Events:</string>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
+          <widget class="QPushButton" name="eventButton_1">
+           <property name="text">
+            <string>Important</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="eventButton_2">
+           <property name="text">
+            <string>Positive</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="eventButton_3">
+           <property name="text">
+            <string>Negative</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="eventButton_4">
+           <property name="text">
+            <string>Boring</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -806,6 +842,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>poseButton_1</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setPoseTo1()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>63</x>
+     <y>635</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>320</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>poseButton_2</sender>
+   <signal>clicked()</signal>
+   <receiver>AvRecorder</receiver>
+   <slot>setPoseTo2()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>155</x>
+     <y>635</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>320</x>
+     <y>349</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>setOutputLocation()</slot>
@@ -826,5 +894,7 @@
   <slot>event2()</slot>
   <slot>event3()</slot>
   <slot>event4()</slot>
+  <slot>setPoseTo1()</slot>
+  <slot>setPoseTo2()</slot>
  </slots>
 </ui>

@@ -93,6 +93,9 @@ private slots:
     void setStatusTo5();
     void setStatusTo6();
 
+    void setPoseTo1();
+    void setPoseTo2();
+
     void event1();
     void event2();
     void event3();
@@ -110,7 +113,8 @@ private slots:
 
 private:
     void clearAudioLevels();
-    void setStatus(int);
+    void setStatus(int, bool=true);
+    void setPose(int, bool=true);
     void handleEvent(int);
     void writeAnnotation(int, const QString &);
 
