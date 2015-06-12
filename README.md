@@ -1,8 +1,8 @@
 # meeting-recorder
 
-A Qt/OpenCV-based webcam and audio recorder.  Supports up to two simultaneous cameras and writes video immediately to disk. Recorded files can be directly uploaded to server with SFTP. 
+A Qt/OpenCV-based webcam and audio recorder especially targeted for meetings.  Supports up to two simultaneous cameras and writes video immediately to disk. Recorded files can be directly uploaded to server with SFTP. Also includes self-annotation buttons for meeting annotation.
 
-Development happens here.  A ready-made distribution package for OS X can be found in the [Re:Know WP3 folder](https://drive.google.com/open?id=0B6DGTJyjK623fmF2QlBNSHlBUXZkUGJIVHpOdkhPWnFIbjB6Y0Y5T1p0Tm8weDltdjB5TmM&authuser=0).
+Development happens here.  Ready-made distribution packages for OS X and Windows can be found in the [Re:Know WP3 folder](https://drive.google.com/open?id=0B6DGTJyjK623fmF2QlBNSHlBUXZkUGJIVHpOdkhPWnFIbjB6Y0Y5T1p0Tm8weDltdjB5TmM&authuser=0).
 
 ## Requirements
 
