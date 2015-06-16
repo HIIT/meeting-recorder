@@ -38,6 +38,9 @@ public:
 private:
     QImage Mat2QImage(cv::Mat const& src);
 
+    /// Aspect ratio preserving resize
+    void resizeAR(cv::Mat &, cv::Size);
+
     void setDefaultDesiredInputSize();
 
     int framerate;

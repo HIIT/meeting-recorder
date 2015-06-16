@@ -153,9 +153,8 @@ void CameraThread::run() Q_DECL_OVERRIDE {
       if (is_active) {
         if (frame.cols && frame.rows) {
 	  
-	  if (output_size.width != 0) {
-	    resize(frame, frame, output_size);
-	  }
+	  if (output_size.width != 0)
+	      resizeAR(frame, output_size);
 	  
 	  QDateTime datetime = QDateTime::currentDateTime();
 	  rectangle(frame, Point(2,frame.rows-22), Point(300, frame.rows-8),
@@ -198,6 +197,31 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     } // for (;;)
 
     emit resultReady(result);
+}
+
+// ---------------------------------------------------------------------
+
+void CameraThread::resizeAR(Mat &frame, Size osize) {
+
+    float o_aspect_ratio = float(osize.width)/float(osize.height);
+    float f_aspect_ratio = float(frame.cols)/float(frame.rows);
+
+    //qDebug() << o_aspect_ratio << f_aspect_ratio << fabs(f_aspect_ratio-o_aspect_ratio);
+
+    if (fabs(f_aspect_ratio-o_aspect_ratio)<0.01) {
+	resize(frame, frame, osize);
+	return;
+    }
+
+    Mat newframe = Mat::zeros(osize, CV_8UC3);
+    size_t roi_width = size_t(f_aspect_ratio*osize.height);
+    size_t roi_displacement = (osize.width-roi_width)/2;
+    Mat roi(newframe, Rect(roi_displacement, 0, roi_width, osize.height));
+    resize(frame, roi, roi.size());
+    newframe.copyTo(frame);
+
+    //qDebug() << roi.cols << roi.rows;
+    return;
 }
 
 // ---------------------------------------------------------------------
