@@ -114,7 +114,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 #endif
 
     // Note: These need to match the default values in AvRecorder::AvRecorder():
-    framerate = 15;
+    framerate = 25;
     output_size = Size(640,360);
 
     // initialize initial timestamps

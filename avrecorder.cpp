@@ -162,7 +162,7 @@ AvRecorder::AvRecorder(QWidget *parent) :
     ui->frameRateBox->addItem("15");
     ui->frameRateBox->addItem("10");
     ui->frameRateBox->addItem("5");
-    ui->frameRateBox->setCurrentIndex(2);  // Needs to match CameraThread::framerate
+    ui->frameRateBox->setCurrentIndex(1);  // Needs to match CameraThread::framerate
 
     connect(audioRecorder, SIGNAL(durationChanged(qint64)), this,
             SLOT(updateProgress(qint64)));
