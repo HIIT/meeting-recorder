@@ -1,3 +1,27 @@
+/*
+Copyright (c) 2015 University of Helsinki
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #include <iostream>
 #include <fstream>
@@ -15,8 +39,10 @@
 using namespace cv;
 using namespace std;
 
-#define REKNOW_LOGO "/home/jmakoske/mnt/reknow/instrumented_meeting_room/ReKnow_logo_rgb_small.png"
-#define REKNOW_LOGO_MASK "/home/jmakoske/mnt/reknow/instrumented_meeting_room/ReKnow_logo_rgb_small_mask.png"
+#define REKNOW_GROUP_DISK_PATH "/home/jmakoske/mnt/reknow/"
+
+#define REKNOW_LOGO      REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb_small.png"
+#define REKNOW_LOGO_MASK REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb_small_mask.png"
 
 // ----------------------------------------------------------------------
 
@@ -40,10 +66,13 @@ time_t calc_epoch_timestring(const string&, bool = true);
 
 void help(char** av) {
   cout << "Usage:" << endl << av[0] 
-       << " [options] idx:videofile [idx:videofile ...] " << endl << endl
+       << " [options] idx:videofile[:offset] [idx:videofile[:offset] ...] "
+       << endl << endl
        << "Arguments:" << endl
        << "  idx       : index of video file, starting from 0" << endl
-       << "  videofile : full path to video file" << endl << endl
+       << "  videofile : full path to video file" << endl
+       << "  offset    : optional offset for extracted starting timestamp" 
+       << endl << endl
        << "Options:" << endl
        << "  [--todisk|--todisk=X]  : " 
        << "save output video to disk as \"output.avi\" or as \"X\"" << endl
@@ -96,13 +125,27 @@ time_t calc_epoch(const string &fn) {
     wstring wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Recorded_Date"));
     string tmp(wrdate.begin(), wrdate.end());
     timestring = tmp;
+    if (timestring.size())
+      cout << "  found Recorded_Date: " << timestring << endl;
+    else {
+      cout << "  Recorded_Date not found" << endl;
+      wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Encoded_Date"));
+      string tmp2(wrdate.begin(), wrdate.end());
+      if (tmp2.size()) {
+	vector<string> tmpv;
+	boost::split(tmpv, tmp2, boost::is_any_of(" "));
+	timestring = tmpv[1]+"T"+tmpv[2]+"EEST";
+	cout << "  found Encoded_date: " << timestring << endl;
+      } else
+	cout << "  Encoded_date not found" << endl;
+    }
     //wcout << MI.Option(__T("Info_Parameters"));
     MI.Close();
   }
   
   if (!timestring.size()) {
     string timefn = timestampfn(fn);
-    cout << "Recording date not found, expecting a timestamp file [" 
+    cout << "Date not found with MediaInfo, expecting a timestamp file [" 
 	 << timefn << "]" << endl;
 
     ifstream timefile(timefn);
@@ -266,7 +309,11 @@ int main(int ac, char** av) {
 
     vector<string> parts;
     boost::split(parts, arg, boost::is_any_of(":"));
-    if (parts.size() != 2) {
+
+    int epoch_offset = 0;
+    if (parts.size() == 3) {
+      epoch_offset = atoi(parts[2].c_str());    
+    } else if (parts.size() != 2) {
       cerr << "ERROR: Unable to parse [" << arg << "]" << endl;
       return 1;
     }
@@ -280,7 +327,9 @@ int main(int ac, char** av) {
       return 1;
     }
 
-    time_t epoch = calc_epoch(fn);
+    if (epoch_offset != 0)
+      cout << "Using an offset of " << epoch_offset << " for " << fn << endl;
+    time_t epoch = calc_epoch(fn) + epoch_offset;
     if (epoch == 0)
       continue;
 
