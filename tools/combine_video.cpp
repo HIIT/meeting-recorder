@@ -116,48 +116,49 @@ string timestampfn(const string &fn) {
 // ----------------------------------------------------------------------
 
 time_t calc_epoch(const string &fn) {
-
-  MediaInfoLib::MediaInfo MI;
-  string timestring;      
-  wstring wfn(fn.begin(), fn.end());
-  if (MI.Open(wfn)) {
-    cout << "Analyzing " << fn << " with MediaInfo" << endl;
-    wstring wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Recorded_Date"));
-    string tmp(wrdate.begin(), wrdate.end());
-    timestring = tmp;
-    if (timestring.size())
-      cout << "  found Recorded_Date: " << timestring << endl;
-    else {
-      cout << "  Recorded_Date not found" << endl;
-      wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Encoded_Date"));
-      string tmp2(wrdate.begin(), wrdate.end());
-      if (tmp2.size()) {
-	vector<string> tmpv;
-	boost::split(tmpv, tmp2, boost::is_any_of(" "));
-	timestring = tmpv[1]+"T"+tmpv[2]+"EEST";
-	cout << "  found Encoded_date: " << timestring << endl;
-      } else
-	cout << "  Encoded_date not found" << endl;
-    }
-    //wcout << MI.Option(__T("Info_Parameters"));
-    MI.Close();
-  }
   
-  if (!timestring.size()) {
-    string timefn = timestampfn(fn);
-    cout << "Date not found with MediaInfo, expecting a timestamp file [" 
-	 << timefn << "]" << endl;
-
-    ifstream timefile(timefn);
-    if (!timefile) {
-      cerr << "ERROR:  Timestamp file not found [" << timefn << "]" << endl;
-      return 0;
-    }
+  string timestring, timefn = timestampfn(fn);
+  ifstream timefile(timefn);
+  if (timefile) {
+    cout << "Found timestamp file [" << timefn << "]" 
+	 << endl;
     if (!getline(timefile, timestring)) {
       cerr << "ERROR:  Timestamp file not readable [" << timefn << "]" << endl;
       return 0;
     }
+  } else {
+   cout << "No timestamp file [" << timefn << "] found, looking for metadata next" 
+	<< endl;
 
+   MediaInfoLib::MediaInfo MI;
+   wstring wfn(fn.begin(), fn.end());
+   if (MI.Open(wfn)) {
+     cout << "Analyzing " << fn << " with MediaInfo" << endl;
+     wstring wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Recorded_Date"));
+     string tmp(wrdate.begin(), wrdate.end());
+     timestring = tmp;
+     if (timestring.size())
+       cout << "  found Recorded_Date: " << timestring << endl;
+     else {
+       cout << "  Recorded_Date not found" << endl;
+       wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Encoded_Date"));
+       string tmp2(wrdate.begin(), wrdate.end());
+       if (tmp2.size()) {
+	 vector<string> tmpv;
+	 boost::split(tmpv, tmp2, boost::is_any_of(" "));
+	 timestring = tmpv[1]+"T"+tmpv[2]+"EEST";
+	 cout << "  found Encoded_date: " << timestring << endl;
+       } else
+	 cout << "  Encoded_date not found" << endl;
+     }
+     //wcout << MI.Option(__T("Info_Parameters"));
+     MI.Close();
+   }
+  }
+  
+  if (!timestring.size()) {
+    cerr << "ERROR: Timestamp not found" << endl;
+    return 0;
   }
 
   return calc_epoch_timestring(timestring);
@@ -448,7 +449,6 @@ int main(int ac, char** av) {
   Mat logo_mask = imread(REKNOW_LOGO_MASK, 0);
 
   string window_name = "video | q or esc to quit | s to take screenshot";
-  cout << "press q or esc to quit" << endl;
   namedWindow(window_name); //resizable window;
 
   vector<pair<bool, Mat> > frames;
