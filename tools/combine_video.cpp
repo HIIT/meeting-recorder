@@ -82,6 +82,8 @@ void help(char** av) {
        << "idx of videos to match slides against, use \"-1\" for none" << endl
        << "  [--fixedslide=X]       : " 
        << "filename of a fixed slide shown continously" << endl
+       << "  [--fps=X]              : "
+       << "set framerate to X, default is 25" << endl
        << "  [--hr=X]               : " 
        << "filename of heart rate CSV data to be shown" << endl;
 }
@@ -276,6 +278,7 @@ int main(int ac, char** av) {
   vector<capturestruct> captures;
   bool write_video = false;
   string outputfn = "output.avi", slidedir = ".", fixedslidefn = "";
+  int framerate = 25;
   map<time_t, double> hr;
 
   for (int i=1; i<ac; i++) {
@@ -301,6 +304,10 @@ int main(int ac, char** av) {
 
     } else if (boost::starts_with(arg, "--slideidx=") && arg.size()>11) {
       slideidx = atoi(arg.substr(11).c_str());
+      continue;
+
+    } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
+      framerate = atoi(arg.substr(6).c_str());
       continue;
 
     } else if (boost::starts_with(arg, "--hr=") && arg.size()>5) {
@@ -431,7 +438,6 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  int framerate = 15;
   int fourcc = CV_FOURCC('m','p','4','v');
 
   time_t current_epoch = min_epoch; 
