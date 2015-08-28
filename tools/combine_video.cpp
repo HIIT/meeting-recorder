@@ -43,6 +43,7 @@ using namespace std;
 
 #define REKNOW_LOGO      REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb_small.png"
 #define REKNOW_LOGO_MASK REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb_small_mask.png"
+#define REKNOW_LOGO_BIG  REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb.png"
 
 // ----------------------------------------------------------------------
 
@@ -278,6 +279,7 @@ int main(int ac, char** av) {
   vector<capturestruct> captures;
   bool write_video = false;
   string outputfn = "output.avi", slidedir = ".", fixedslidefn = "";
+  string title;
   int framerate = 25;
   map<time_t, double> hr;
 
@@ -313,7 +315,12 @@ int main(int ac, char** av) {
     } else if (boost::starts_with(arg, "--hr=") && arg.size()>5) {
       process_hr(arg.substr(5), hr);
       continue;
+
+    } else if (boost::starts_with(arg, "--title=") && arg.size()>8) {
+      title = arg.substr(8);
+      continue;
     }
+
 
     vector<string> parts;
     boost::split(parts, arg, boost::is_any_of(":"));
@@ -454,6 +461,9 @@ int main(int ac, char** av) {
   Mat logo = imread(REKNOW_LOGO, CV_LOAD_IMAGE_COLOR);
   Mat logo_mask = imread(REKNOW_LOGO_MASK, 0);
 
+  Mat logo_big = imread(REKNOW_LOGO_BIG, CV_LOAD_IMAGE_COLOR);
+  resize(logo_big, logo_big, Size(), 0.1, 0.1);
+
   string window_name = "video | q or esc to quit | s to take screenshot";
   namedWindow(window_name); //resizable window;
 
@@ -471,6 +481,23 @@ int main(int ac, char** av) {
 
   int nf = 1;
   string prevslidefn = "";
+
+  for (int i=0; i<250; i++) {
+    Mat frame = Mat::zeros(totalsize, CV_8UC3);
+    frame = Scalar(255,255,255);
+    Mat roi(frame, Rect((frame.cols-logo_big.cols)/2,20,logo_big.cols,logo_big.rows));
+    logo_big.copyTo(roi);
+    putText(frame, title.c_str(),
+	    Point(20, logo_big.rows+70), FONT_HERSHEY_SIMPLEX, 1.0,
+	    Scalar(0,0,0), 2.5);
+    string current_time = timedatestr(current_epoch);
+    putText(frame, current_time.c_str(),
+	    Point(20, logo_big.rows+110), FONT_HERSHEY_SIMPLEX, 1.0,
+	    Scalar(0,0,0), 2.5);
+
+    imshow(window_name, frame);
+    waitKey(5);
+  }
 
   for (;; nf++) {
 
