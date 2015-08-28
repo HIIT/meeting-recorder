@@ -505,7 +505,7 @@ int main(int ac, char** av) {
     putText(frame, title.c_str(),
 	    Point(20, logo_big.rows+70), FONT_HERSHEY_SIMPLEX, 1.0,
 	    Scalar(0,0,0), 2.5);
-    string current_time = timedatestr(current_epoch);
+    string current_time = timedatestr(recstart_epoch);
     putText(frame, current_time.c_str(),
 	    Point(20, logo_big.rows+110), FONT_HERSHEY_SIMPLEX, 1.0,
 	    Scalar(0,0,0), 2.5);
