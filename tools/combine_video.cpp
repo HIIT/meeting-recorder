@@ -81,10 +81,14 @@ void help(char** av) {
        << "path to the slide pngs" << endl
        << "  [--slideidx=X]         : " 
        << "idx of videos to match slides against, use \"-1\" for none" << endl
+       << "  [--startidx=X]         : " 
+       << "idx of videos to start the actual recording, by default not used" << endl
        << "  [--fixedslide=X]       : " 
        << "filename of a fixed slide shown continously" << endl
        << "  [--fps=X]              : "
        << "set framerate to X, default is 25" << endl
+       << "  [--title=X]              : "
+       << "set title of video to X" << endl
        << "  [--hr=X]               : " 
        << "filename of heart rate CSV data to be shown" << endl;
 }
@@ -274,8 +278,8 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  int nidx = -1, slideidx = 0;
-  time_t min_epoch = 9999999999;
+  int nidx = -1, slideidx = 0, startidx = -1;
+  time_t min_epoch = 9999999999, recstart_epoch = 9999999999;
   vector<capturestruct> captures;
   bool write_video = false;
   string outputfn = "output.avi", slidedir = ".", fixedslidefn = "";
@@ -310,6 +314,10 @@ int main(int ac, char** av) {
 
     } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
       framerate = atoi(arg.substr(6).c_str());
+      continue;
+
+    } else if (boost::starts_with(arg, "--startidx=") && arg.size()>11) {
+      startidx = atoi(arg.substr(11).c_str());
       continue;
 
     } else if (boost::starts_with(arg, "--hr=") && arg.size()>5) {
@@ -348,8 +356,15 @@ int main(int ac, char** av) {
     if (epoch == 0)
       continue;
 
+
     if (epoch<min_epoch)
       min_epoch = epoch;
+
+    if (startidx < 0) {
+      recstart_epoch = min_epoch;
+    } else if (idx == startidx && epoch<recstart_epoch) {
+      recstart_epoch = epoch;
+    }
 
     capturestruct c(idx, epoch, capture);
 
@@ -495,8 +510,12 @@ int main(int ac, char** av) {
 	    Point(20, logo_big.rows+110), FONT_HERSHEY_SIMPLEX, 1.0,
 	    Scalar(0,0,0), 2.5);
 
-    imshow(window_name, frame);
-    waitKey(5);
+    if (write_video) {
+      video << frame;
+    } else {
+      imshow(window_name, frame);
+      waitKey(5);
+    }
   }
 
   for (;; nf++) {
@@ -597,10 +616,15 @@ int main(int ac, char** av) {
 	      Point(frame.cols-150,frame.rows-50), FONT_HERSHEY_PLAIN, 5.0,
 	      Scalar(0,0,255), 8);
     }
-      
+    if (current_epoch < recstart_epoch) {
+      string recstart_text = "Recording will start at " + timedatestr(recstart_epoch);
+      putText(frame, recstart_text.c_str(), Point(10,20), FONT_HERSHEY_PLAIN, 1.0,
+	      Scalar(0,0,255));
+    }
 
     if (write_video) {
-      video << frame;
+      if (current_epoch >= recstart_epoch)
+	video << frame;
 
       if (slidefn != "" && slidefn != prevslidefn) {
 	slideoutfile << current_epoch << " " << slidefn << endl;
