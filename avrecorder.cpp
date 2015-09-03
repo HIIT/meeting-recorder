@@ -288,6 +288,7 @@ void AvRecorder::toggleRecord()
     if (!outputLocationSet) {
 	QMessageBox msgBox;
 	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setIcon(QMessageBox::Information);
 	msgBox.setText("Create target directory first");
 	msgBox.setInformativeText("Before recording, you need to create a directory "
 				  "to store the media files.");
@@ -368,13 +369,14 @@ void AvRecorder::upload()
 
 #if defined(Q_OS_WIN)
 
+    msgBox.setIcon(QMessageBox::Warning);
     msgBox.setText("Upload not supported on Windows.");
     msgBox.setInformativeText("Data upload is currently not supported on Windows. "
                               "Please use some alternative way to send the data.");
     msgBox.exec();
 
 #else
-
+    msgBox.setIcon(QMessageBox::Question);
     msgBox.setText(QString("About to upload meeting data from %1 (%2 MB).")
 		   .arg(dirName).arg(totalsize));
     msgBox.setInformativeText("Do you want to start the upload process?");
@@ -622,6 +624,7 @@ void AvRecorder::writeAnnotation(int anno, const QString &fn) {
     if (!outputLocationSet) {
 	QMessageBox msgBox;
 	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setIcon(QMessageBox::Information);
 	msgBox.setText("Create target directory first");
 	msgBox.setInformativeText("Before annotation, you need to create a directory "
 				  "to store the annotations.");
