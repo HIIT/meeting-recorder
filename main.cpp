@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
         QObject::connect(&recorder, SIGNAL(cameraFramerate(QString)),
                          cam, SLOT(setCameraFramerate(QString)));
 
-        QObject::connect(&recorder, SIGNAL(cameraStateChanged(int, int)),
-                         cam, SLOT(setCameraState(int, int)));
+        QObject::connect(&recorder, SIGNAL(cameraPowerChanged(int, int)),
+                         cam, SLOT(setCameraPower(int, int)));
 
         QObject::connect(cam, SIGNAL(cameraInfo(int,int,int)),
                          &recorder, SLOT(processCameraInfo(int, int, int)));
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
         if (!(*i)->wait(2000)) {
 	  (*i)->terminate();
 	  if (!(*i)->wait(2000))
-	    qDebug() << "CameraThread to terminate!";
+	    qDebug() << "CameraThread failed to terminate!";
 	}
       }
 

@@ -36,14 +36,18 @@ using namespace cv;
 
 // ---------------------------------------------------------------------
 
-CameraThread::CameraThread(int i) : idx(i), is_active(false)
+CameraThread::CameraThread(int i) : idx(i), is_active(false),
+				    was_active(false)
 {
-  setDefaultDesiredInputSize();
+    setDefaultDesiredInputSize();
+    window_size = Size(240,135);
 }
 
 // ---------------------------------------------------------------------
 
-CameraThread::CameraThread(int i, QString wxh) : idx(i), is_active(false)
+CameraThread::CameraThread(int i, QString wxh) : idx(i),
+						 is_active(false),
+						 was_active(false)
 {
   if (wxh.contains('x')) {
     QStringList wh = wxh.split('x');
@@ -54,6 +58,8 @@ CameraThread::CameraThread(int i, QString wxh) : idx(i), is_active(false)
       setDefaultDesiredInputSize();
   } else
     setDefaultDesiredInputSize();
+
+    window_size = Size(240,135);
 }
 
 // ---------------------------------------------------------------------
@@ -149,36 +155,42 @@ void CameraThread::run() Q_DECL_OVERRIDE {
       capture >> frame;
       
       if (is_active) {
-        if (frame.cols && frame.rows) {
-	  
-	  if (output_size.width != 0)
-	      resizeAR(frame, output_size);
-	  
-	  QDateTime datetime = QDateTime::currentDateTime();
-	  rectangle(frame, Point(2,frame.rows-22), Point(300, frame.rows-8),
-		    Scalar(0,0,0), CV_FILLED);
-	  putText(frame, datetime.toString().toStdString().c_str(),
-		  Point(10,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0,
-		  Scalar(255,255,255));
-	  
-	  // Save frame to video
-	  if (record_video && video.isOpened())
-	      video << frame;
+	  was_active = true;
 
-	  Mat window;
-	  resize(frame, window, Size(240,135));
-	  putText(window, QString::number(avgload, 'f', 2).toStdString().c_str(),
-		  Point(window.cols-60,20), FONT_HERSHEY_PLAIN, 1.5,
-		  Scalar(0,0,255), 2);
-	  if (avgload>1.0)
-	      putText(window, "CPU OVERLOAD",
-		      Point(0,80), FONT_HERSHEY_PLAIN, 1.9,
-		      Scalar(0,0,255), 2);
-	  QImage qimg = Mat2QImage(window);
-	  emit qimgReady(idx, qimg);
+	  if (frame.cols && frame.rows) {
 	  
-        } else
-	  qDebug() << "Camera" << idx << ": Skipped frame";
+	      if (output_size.width != 0)
+		  resizeAR(frame, output_size);
+	  
+	      QDateTime datetime = QDateTime::currentDateTime();
+	      rectangle(frame, Point(2,frame.rows-22), Point(300, frame.rows-8),
+			Scalar(0,0,0), CV_FILLED);
+	      putText(frame, datetime.toString().toStdString().c_str(),
+		      Point(10,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0,
+		      Scalar(255,255,255));
+	  
+	      // Save frame to video
+	      if (record_video && video.isOpened())
+		  video << frame;
+
+	      Mat window;
+	      resize(frame, window, window_size);
+	      putText(window, QString::number(avgload, 'f', 2).toStdString().c_str(),
+		      Point(window.cols-60,20), FONT_HERSHEY_PLAIN, 1.5,
+		      Scalar(0,0,255), 2);
+	      if (avgload>1.0)
+		  putText(window, "CPU OVERLOAD",
+			  Point(0,80), FONT_HERSHEY_PLAIN, 1.9,
+			  Scalar(0,0,255), 2);
+	      QImage qimg = Mat2QImage(window);
+	      emit qimgReady(idx, qimg);
+	  
+	  } else
+	      qDebug() << "Camera" << idx << ": Skipped frame";
+      } else if (was_active) {
+	  was_active = false;
+	  QImage qimg = Mat2QImage(Mat::zeros(window_size, CV_8UC3));
+	  emit qimgReady(idx, qimg);
       }
 
       //write previous and current frame timestamp to console
@@ -337,9 +349,9 @@ void CameraThread::breakLoop() {
 
 // ---------------------------------------------------------------------
 
-void CameraThread::setCameraState(int i, int state) {
+void CameraThread::setCameraPower(int i, int state) {
     if (i == idx) {
-        qDebug() << "Camera" << idx << "received" << state;
+        qDebug() << "Camera" << idx << "power now" << state;
         is_active = state;
     }
 }

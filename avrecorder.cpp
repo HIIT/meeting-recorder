@@ -608,12 +608,12 @@ void AvRecorder::setCameraFramerate(QString fps) {
 
 void AvRecorder::setCamera0State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
-    emit cameraStateChanged(0, state);
+    emit cameraPowerChanged(0, state);
 }
 
 void AvRecorder::setCamera1State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
-    emit cameraStateChanged(1, state);
+    emit cameraPowerChanged(1, state);
 }
 
 // ---------------------------------------------------------------------
