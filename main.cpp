@@ -118,9 +118,27 @@ int main(int argc, char *argv[])
     resolutions.insert("720p", "1280x720");
 
     if (args.size()>1)
-      use_cameras.fill(false);
-    else
-      use_cameras.fill(true);
+	use_cameras.fill(false);
+    else {
+	use_cameras.fill(true);
+	QStringList items;
+	items << "Both webcams" << "First webcam only" << "Second webcam only"
+	      << "None";
+	bool ok;
+	QString item =
+	    QInputDialog::getItem(&recorder, "Re:Know Meeting recorder",
+				  "Please select the webcams to open",
+				  items, 1, false, &ok);
+	if (ok) {
+	    int idx = items.indexOf(item);
+	    if (idx == 1)
+		use_cameras[1] = false;
+	    if (idx == 2)
+		use_cameras[0] = false;
+	    if (idx == 3)
+		use_cameras[0] = use_cameras[1] = false;
+	}
+    }
 
     for (int i = 1; i < args.size(); ++i) {
       bool ok = true;
