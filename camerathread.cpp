@@ -24,6 +24,8 @@
 
 #include <QDebug>
 #include <QDateTime>
+#include <QTextStream>
+#include <QLinkedList>
 
 #include "boost/date_time/posix_time/posix_time.hpp"
 
@@ -66,9 +68,9 @@ void CameraThread::setDefaultDesiredInputSize() {
 void CameraThread::run() Q_DECL_OVERRIDE {
     QString result;
 
-    time_duration td, td1;
+    time_duration td, td1, td2;
     ptime nextFrameTimestamp, currentFrameTimestamp;
-    ptime initialLoopTimestamp, finalLoopTimestamp;
+    ptime initialLoopTimestamp, processingDoneTimestamp, finalLoopTimestamp;
     // int delayFound = 0;
 
     // initialize capture on default source
@@ -122,9 +124,12 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     currentFrameTimestamp = nextFrameTimestamp;
     td = (currentFrameTimestamp - nextFrameTimestamp);
 
+    QLinkedList<time_duration> tdlist;
+
     stopLoop = false;
     is_active = true;
 
+    double avgload = 0.0;
     for (;;) {
 
       if (stopLoop) {
@@ -136,16 +141,9 @@ void CameraThread::run() Q_DECL_OVERRIDE {
       if (!record_video && video.isOpened())
 	  video.release();
       
-      // wait for X microseconds until 1second/framerate time has passed after previous frame write
-      while(td.total_microseconds() < 1000000/framerate){
-        //determine current elapsed time
-	currentFrameTimestamp = microsec_clock::local_time();
-	td = (currentFrameTimestamp - nextFrameTimestamp);
-      }
-      
-      // determine time at start of write
+      // determine time at start of loop
       initialLoopTimestamp = microsec_clock::local_time();
-      
+            
       Mat frame;
       
       capture >> frame;
@@ -166,9 +164,16 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 	  // Save frame to video
 	  if (record_video && video.isOpened())
 	      video << frame;
-	  
+
 	  Mat window;
 	  resize(frame, window, Size(240,135));
+	  putText(window, QString::number(avgload, 'f', 2).toStdString().c_str(),
+		  Point(window.cols-60,20), FONT_HERSHEY_PLAIN, 1.5,
+		  Scalar(0,0,255), 2);
+	  if (avgload>1.0)
+	      putText(window, "CPU OVERLOAD",
+		      Point(0,80), FONT_HERSHEY_PLAIN, 1.9,
+		      Scalar(0,0,255), 2);
 	  QImage qimg = Mat2QImage(window);
 	  emit qimgReady(idx, qimg);
 	  
@@ -178,7 +183,17 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 
       //write previous and current frame timestamp to console
       //qDebug() << nextFrameTimestamp << " " << currentFrameTimestamp << " ";
-      
+
+      // determine time when all processing done
+      processingDoneTimestamp = microsec_clock::local_time();
+
+      // wait for X microseconds until 1second/framerate time has passed after previous frame write
+      while(td.total_microseconds() < 1000000/framerate){
+	  //determine current elapsed time
+	  currentFrameTimestamp = microsec_clock::local_time();
+	  td = (currentFrameTimestamp - nextFrameTimestamp);
+      }
+
       // add 1second/framerate time for next loop pause
       nextFrameTimestamp = nextFrameTimestamp + microsec(1000000/framerate);
       
@@ -190,11 +205,30 @@ void CameraThread::run() Q_DECL_OVERRIDE {
       //if delay is consistently larger than said value, then CPU is not powerful
       // enough to capture/decompress/record/compress that fast.
       finalLoopTimestamp = microsec_clock::local_time();
-      td1 = (finalLoopTimestamp - initialLoopTimestamp);
-      //delayFound = td1.total_milliseconds();
-      //qDebug() << "Delay: " << delayFound;
+      td1 = (processingDoneTimestamp - initialLoopTimestamp);
+      td2 = (finalLoopTimestamp - initialLoopTimestamp);
+
+      tdlist << td1;
+      size_t tdlistsize = tdlist.size();
+      if (tdlistsize>100)
+	  tdlist.removeFirst();
+      long total_td = 0;
+      QLinkedList<time_duration>::const_iterator it;
+      for (it = tdlist.constBegin(); it != tdlist.constEnd(); ++it)
+	  total_td += it->total_microseconds();
+      avgload = total_td*framerate/(tdlistsize*1000000.0);
+      /*
+      QDebug dbg = qDebug(); dbg.noquote();
+      dbg << idx << ": Processing:"
+	  << QString("%1").arg(td1.total_microseconds(), 6, 10, QChar(' '))
+	  << "us. Final:"
+	  << QString("%1").arg(td2.total_microseconds(), 6, 10, QChar(' '))
+	  << "us. Target:" << 1000000/framerate << "us. ("
+	  << td2.total_microseconds()*framerate/10000.0 << "% ) Load:"
+	  << avgload << tdlistsize;
+      */
       
-    } // for (;;)
+    } // for (;;) // td2.total_milliseconds()
 
     emit resultReady(result);
 }
