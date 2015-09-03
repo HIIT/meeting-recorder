@@ -568,8 +568,7 @@ void AvRecorder::processBuffer(const QAudioBuffer& buffer)
 
 // ---------------------------------------------------------------------
 
-void AvRecorder::processQImage(int n, const QImage qimg)
-{
+void AvRecorder::processQImage(int n, const QImage qimg) {
     //qDebug() << "processQImage(): n=" << n;
     if (n==0) {
         ui->viewfinder_0->setPixmap(QPixmap::fromImage(qimg));
@@ -582,14 +581,23 @@ void AvRecorder::processQImage(int n, const QImage qimg)
 
 // ---------------------------------------------------------------------
 
-void AvRecorder::processCameraInfo(int n, int w, int h)
-{
+void AvRecorder::processCameraInfo(int n, int w, int h) {
     if (n==0) {
         ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w).arg(h));
         ui->camera_label_0->setChecked(true);
     } else if (n==1) {
         ui->camera_label_1->setText(QString("Camera 1: %1x%2").arg(w).arg(h));
         ui->camera_label_1->setChecked(true);
+    }
+}
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::disableCameraCheckbox(int n) {
+    if (n==0) {
+        ui->camera_label_0->setEnabled(false);
+    } else if (n==1) {
+        ui->camera_label_1->setEnabled(false);
     }
 }
 

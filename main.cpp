@@ -170,6 +170,7 @@ int main(int argc, char *argv[])
     for (int idx=0; idx<2; idx++) {
       if (!use_cameras.at(idx)) {
 	qDebug() << "Camera" << idx << "disabled";
+	recorder.disableCameraCheckbox(idx);
 	continue;
       }
       

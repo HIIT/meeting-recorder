@@ -74,6 +74,7 @@ public slots:
     void processBuffer(const QAudioBuffer&);
     void processQImage(int n, const QImage qimg);
     void processCameraInfo(int, int, int);
+    void disableCameraCheckbox(int n);
     void displayErrorMessage(const QString&);
     void uncheckEvent1();
     void uncheckEvent2();
