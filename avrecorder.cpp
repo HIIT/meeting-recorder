@@ -302,6 +302,9 @@ void AvRecorder::toggleRecord()
     if (audioRecorder->state() == QMediaRecorder::StoppedState) {
         audioRecorder->setAudioInput(boxValue(ui->audioDeviceBox).toString());
 
+	if (!OutputLocationEmptyOrOk())
+	    return;
+
         QAudioEncoderSettings settings;
         settings.setCodec(boxValue(ui->audioCodecBox).toString());
         settings.setSampleRate(boxValue(ui->sampleRateBox).toInt());
@@ -392,29 +395,50 @@ void AvRecorder::upload()
 
 // ---------------------------------------------------------------------
 
-void AvRecorder::setOutputLocation()
-{
+void AvRecorder::setOutputLocation() {
     QDir dir(defaultDir);
     if (!dir.exists()) {
 	qDebug() << "Creating directory" << defaultDir;
-	    if (!dir.mkpath(".")) {
-		qWarning() << "WARNING: Failed to create directory" << defaultDir;
-		defaultDir = QDir::homePath();
-	    }
+	if (!dir.mkpath(".")) {
+	    qWarning() << "WARNING: Failed to create directory" << defaultDir;
+	    defaultDir = QDir::homePath();
+	}
     }
 
     dirName = QFileDialog::getExistingDirectory(this, "Select or create a meeting",
 						defaultDir,
                                                 QFileDialog::ShowDirsOnly);
-     if (!dirName.isNull() && !dirName.isEmpty()) {
+    if (!dirName.isNull() && !dirName.isEmpty()) {
 	ui->statusbar->showMessage("Output directory: "+dirName);
-    audioRecorder->setOutputLocation(QUrl::fromLocalFile(dirName+"/audio.wav"));
+	audioRecorder->setOutputLocation(QUrl::fromLocalFile(dirName+"/audio.wav"));
 	emit outputDirectory(dirName);
-	//audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
 	outputLocationSet = true;
     } else
 	outputLocationSet = false;
+}
 
+// ---------------------------------------------------------------------
+
+bool AvRecorder::OutputLocationEmptyOrOk() {
+    QDir dir(dirName);
+    if (!dir.exists()) {
+	qDebug() << "OutputLocationEmptyOrOk(): Directory" << dirName
+		 << "does not exist, this should not happen";
+	return false;
+    }
+    if (dir.entryInfoList(QDir::NoDotAndDotDot|QDir::AllEntries).count()) {
+	QMessageBox msgBox;
+	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+	msgBox.setDefaultButton(QMessageBox::Ok);
+	msgBox.setIcon(QMessageBox::Warning);
+	msgBox.setText("Directory not empty.");
+	msgBox.setInformativeText("The selected output directory for recording "
+				  "is not empty. The old recording will be "
+				  "overwritten.");
+	return (msgBox.exec() == QMessageBox::Ok);
+    }
+    return true;
 }
 
 // ---------------------------------------------------------------------
