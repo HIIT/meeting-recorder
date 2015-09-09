@@ -118,9 +118,27 @@ int main(int argc, char *argv[])
     resolutions.insert("720p", "1280x720");
 
     if (args.size()>1)
-      use_cameras.fill(false);
-    else
-      use_cameras.fill(true);
+	use_cameras.fill(false);
+    else {
+	use_cameras.fill(true);
+	QStringList items;
+	items << "Both webcams" << "First webcam only" << "Second webcam only"
+	      << "None";
+	bool ok;
+	QString item =
+	    QInputDialog::getItem(&recorder, "Re:Know Meeting recorder",
+				  "Please select the webcams to open",
+				  items, 1, false, &ok);
+	if (ok) {
+	    int idx = items.indexOf(item);
+	    if (idx == 1)
+		use_cameras[1] = false;
+	    if (idx == 2)
+		use_cameras[0] = false;
+	    if (idx == 3)
+		use_cameras[0] = use_cameras[1] = false;
+	}
+    }
 
     for (int i = 1; i < args.size(); ++i) {
       bool ok = true;
@@ -152,6 +170,7 @@ int main(int argc, char *argv[])
     for (int idx=0; idx<2; idx++) {
       if (!use_cameras.at(idx)) {
 	qDebug() << "Camera" << idx << "disabled";
+	recorder.disableCameraCheckbox(idx);
 	continue;
       }
       
@@ -181,8 +200,8 @@ int main(int argc, char *argv[])
         QObject::connect(&recorder, SIGNAL(cameraFramerate(QString)),
                          cam, SLOT(setCameraFramerate(QString)));
 
-        QObject::connect(&recorder, SIGNAL(cameraStateChanged(int, int)),
-                         cam, SLOT(setCameraState(int, int)));
+        QObject::connect(&recorder, SIGNAL(cameraPowerChanged(int, int)),
+                         cam, SLOT(setCameraPower(int, int)));
 
         QObject::connect(cam, SIGNAL(cameraInfo(int,int,int)),
                          &recorder, SLOT(processCameraInfo(int, int, int)));
@@ -204,7 +223,7 @@ int main(int argc, char *argv[])
         if (!(*i)->wait(2000)) {
 	  (*i)->terminate();
 	  if (!(*i)->wait(2000))
-	    qDebug() << "CameraThread to terminate!";
+	    qDebug() << "CameraThread failed to terminate!";
 	}
       }
 

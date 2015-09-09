@@ -162,7 +162,7 @@ AvRecorder::AvRecorder(QWidget *parent) :
     ui->frameRateBox->addItem("15");
     ui->frameRateBox->addItem("10");
     ui->frameRateBox->addItem("5");
-    ui->frameRateBox->setCurrentIndex(2);  // Needs to match CameraThread::framerate
+    ui->frameRateBox->setCurrentIndex(1);  // Needs to match CameraThread::framerate
 
     connect(audioRecorder, SIGNAL(durationChanged(qint64)), this,
             SLOT(updateProgress(qint64)));
@@ -288,6 +288,7 @@ void AvRecorder::toggleRecord()
     if (!outputLocationSet) {
 	QMessageBox msgBox;
 	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setIcon(QMessageBox::Information);
 	msgBox.setText("Create target directory first");
 	msgBox.setInformativeText("Before recording, you need to create a directory "
 				  "to store the media files.");
@@ -300,6 +301,9 @@ void AvRecorder::toggleRecord()
 
     if (audioRecorder->state() == QMediaRecorder::StoppedState) {
         audioRecorder->setAudioInput(boxValue(ui->audioDeviceBox).toString());
+
+	if (!OutputLocationEmptyOrOk())
+	    return;
 
         QAudioEncoderSettings settings;
         settings.setCodec(boxValue(ui->audioCodecBox).toString());
@@ -368,13 +372,14 @@ void AvRecorder::upload()
 
 #if defined(Q_OS_WIN)
 
+    msgBox.setIcon(QMessageBox::Warning);
     msgBox.setText("Upload not supported on Windows.");
     msgBox.setInformativeText("Data upload is currently not supported on Windows. "
                               "Please use some alternative way to send the data.");
     msgBox.exec();
 
 #else
-
+    msgBox.setIcon(QMessageBox::Question);
     msgBox.setText(QString("About to upload meeting data from %1 (%2 MB).")
 		   .arg(dirName).arg(totalsize));
     msgBox.setInformativeText("Do you want to start the upload process?");
@@ -390,29 +395,50 @@ void AvRecorder::upload()
 
 // ---------------------------------------------------------------------
 
-void AvRecorder::setOutputLocation()
-{
+void AvRecorder::setOutputLocation() {
     QDir dir(defaultDir);
     if (!dir.exists()) {
 	qDebug() << "Creating directory" << defaultDir;
-	    if (!dir.mkpath(".")) {
-		qWarning() << "WARNING: Failed to create directory" << defaultDir;
-		defaultDir = QDir::homePath();
-	    }
+	if (!dir.mkpath(".")) {
+	    qWarning() << "WARNING: Failed to create directory" << defaultDir;
+	    defaultDir = QDir::homePath();
+	}
     }
 
     dirName = QFileDialog::getExistingDirectory(this, "Select or create a meeting",
 						defaultDir,
                                                 QFileDialog::ShowDirsOnly);
-     if (!dirName.isNull() && !dirName.isEmpty()) {
+    if (!dirName.isNull() && !dirName.isEmpty()) {
 	ui->statusbar->showMessage("Output directory: "+dirName);
-    audioRecorder->setOutputLocation(QUrl::fromLocalFile(dirName+"/audio.wav"));
+	audioRecorder->setOutputLocation(QUrl::fromLocalFile(dirName+"/audio.wav"));
 	emit outputDirectory(dirName);
-	//audioRecorder->setOutputLocation(QUrl::fromLocalFile(fileName));
 	outputLocationSet = true;
     } else
 	outputLocationSet = false;
+}
 
+// ---------------------------------------------------------------------
+
+bool AvRecorder::OutputLocationEmptyOrOk() {
+    QDir dir(dirName);
+    if (!dir.exists()) {
+	qDebug() << "OutputLocationEmptyOrOk(): Directory" << dirName
+		 << "does not exist, this should not happen";
+	return false;
+    }
+    if (dir.entryInfoList(QDir::NoDotAndDotDot|QDir::AllEntries).count()) {
+	QMessageBox msgBox;
+	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+	msgBox.setDefaultButton(QMessageBox::Ok);
+	msgBox.setIcon(QMessageBox::Warning);
+	msgBox.setText("Directory not empty.");
+	msgBox.setInformativeText("The selected output directory for recording "
+				  "is not empty. The old recording will be "
+				  "overwritten.");
+	return (msgBox.exec() == QMessageBox::Ok);
+    }
+    return true;
 }
 
 // ---------------------------------------------------------------------
@@ -566,8 +592,7 @@ void AvRecorder::processBuffer(const QAudioBuffer& buffer)
 
 // ---------------------------------------------------------------------
 
-void AvRecorder::processQImage(int n, const QImage qimg)
-{
+void AvRecorder::processQImage(int n, const QImage qimg) {
     //qDebug() << "processQImage(): n=" << n;
     if (n==0) {
         ui->viewfinder_0->setPixmap(QPixmap::fromImage(qimg));
@@ -580,14 +605,23 @@ void AvRecorder::processQImage(int n, const QImage qimg)
 
 // ---------------------------------------------------------------------
 
-void AvRecorder::processCameraInfo(int n, int w, int h)
-{
+void AvRecorder::processCameraInfo(int n, int w, int h) {
     if (n==0) {
         ui->camera_label_0->setText(QString("Camera 0: %1x%2").arg(w).arg(h));
         ui->camera_label_0->setChecked(true);
     } else if (n==1) {
         ui->camera_label_1->setText(QString("Camera 1: %1x%2").arg(w).arg(h));
         ui->camera_label_1->setChecked(true);
+    }
+}
+
+// ---------------------------------------------------------------------
+
+void AvRecorder::disableCameraCheckbox(int n) {
+    if (n==0) {
+        ui->camera_label_0->setEnabled(false);
+    } else if (n==1) {
+        ui->camera_label_1->setEnabled(false);
     }
 }
 
@@ -608,12 +642,12 @@ void AvRecorder::setCameraFramerate(QString fps) {
 
 void AvRecorder::setCamera0State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
-    emit cameraStateChanged(0, state);
+    emit cameraPowerChanged(0, state);
 }
 
 void AvRecorder::setCamera1State(int state) {
     qDebug() << "setCamera0State(): state=" << state;
-    emit cameraStateChanged(1, state);
+    emit cameraPowerChanged(1, state);
 }
 
 // ---------------------------------------------------------------------
@@ -622,6 +656,7 @@ void AvRecorder::writeAnnotation(int anno, const QString &fn) {
     if (!outputLocationSet) {
 	QMessageBox msgBox;
 	msgBox.setWindowTitle("Re:Know Meeting recorder");
+	msgBox.setIcon(QMessageBox::Information);
 	msgBox.setText("Create target directory first");
 	msgBox.setInformativeText("Before annotation, you need to create a directory "
 				  "to store the annotations.");

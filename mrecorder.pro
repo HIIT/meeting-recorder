@@ -19,10 +19,13 @@ macx {
      OPENCVDIR = /opt/local
 
      INCLUDEPATH += $$OPENCVDIR/include
-     LIBS += $$OPENCVDIR/lib/libopencv_core.dylib
-     LIBS += $$OPENCVDIR/lib/libopencv_highgui.dylib
-     LIBS += $$OPENCVDIR/lib/libopencv_imgproc.dylib
-     LIBS += $$OPENCVDIR/lib/libssh2.dylib
+     LIBS += -L$$OPENCVDIR/lib
+     LIBS += -lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_videoio -lssh2
+
+     #LIBS += $$OPENCVDIR/lib/libopencv_core.dylib
+     #LIBS += $$OPENCVDIR/lib/libopencv_highgui.dylib
+     #LIBS += $$OPENCVDIR/lib/libopencv_imgproc.dylib
+     #LIBS += $$OPENCVDIR/lib/libssh2.dylib
 }
 
 linux-g++* {
@@ -84,3 +87,6 @@ FORMS += avrecorder.ui
 #message("The project contains the following files:")
 #message($$EVERYTHING)
 
+# Local Variables:
+# mode: conf
+# End:

@@ -1,3 +1,27 @@
+/*
+Copyright (c) 2015 University of Helsinki
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 #include <iostream>
 #include <fstream>
@@ -15,21 +39,25 @@
 using namespace cv;
 using namespace std;
 
-#define REKNOW_LOGO "/home/jmakoske/mnt/reknow/instrumented_meeting_room/ReKnow_logo_rgb_small.png"
-#define REKNOW_LOGO_MASK "/home/jmakoske/mnt/reknow/instrumented_meeting_room/ReKnow_logo_rgb_small_mask.png"
+#define REKNOW_GROUP_DISK_PATH "/home/jmakoske/mnt/reknow/"
+
+#define REKNOW_LOGO      REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb_small.png"
+#define REKNOW_LOGO_MASK REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb_small_mask.png"
+#define REKNOW_LOGO_BIG  REKNOW_GROUP_DISK_PATH "instrumented_meeting_room/ReKnow_logo_rgb.png"
 
 // ----------------------------------------------------------------------
 
 struct capturestruct {
   capturestruct(int _idx, time_t _start_epoch, VideoCapture _cap) : 
     idx(_idx), start_epoch(_start_epoch), status(true), 
-    current_frame(0), cap(_cap) { }
+    current_frame(0), cap(_cap), successor(0) { }
   int idx;
   time_t start_epoch;
   bool status;
   int current_frame;
   map <int, string> matches;
   VideoCapture cap; 
+  size_t successor;
 };
 
 // ----------------------------------------------------------------------
@@ -40,10 +68,14 @@ time_t calc_epoch_timestring(const string&, bool = true);
 
 void help(char** av) {
   cout << "Usage:" << endl << av[0] 
-       << " [options] idx:videofile [idx:videofile ...] " << endl << endl
+       << " [options] idx:videofile[:offset] [idx:videofile[:offset] ...] "
+       << endl << endl
        << "Arguments:" << endl
        << "  idx       : index of video file, starting from 0" << endl
-       << "  videofile : full path to video file" << endl << endl
+       << "  videofile : full path to video file" << endl
+       << "  offset    : optional offset for extracted starting timestamp," 
+       << "              the value \"C\" is for continuing from previous video"
+       << endl << endl
        << "Options:" << endl
        << "  [--todisk|--todisk=X]  : " 
        << "save output video to disk as \"output.avi\" or as \"X\"" << endl
@@ -51,10 +83,32 @@ void help(char** av) {
        << "path to the slide pngs" << endl
        << "  [--slideidx=X]         : " 
        << "idx of videos to match slides against, use \"-1\" for none" << endl
+       << "  [--startidx=X]         : " 
+       << "idx of videos to start the actual recording, by default not used"
+       << endl
        << "  [--fixedslide=X]       : " 
        << "filename of a fixed slide shown continously" << endl
+       << "  [--fps=X]              : "
+       << "set framerate to X, default is 25" << endl
+       << "  [--title=X]            : "
+       << "set title of video to X" << endl
        << "  [--hr=X]               : " 
        << "filename of heart rate CSV data to be shown" << endl;
+}
+
+// ----------------------------------------------------------------------
+
+void print_captures(vector<capturestruct> &c) {
+  vector<capturestruct>::const_iterator iter;
+  size_t n=0;
+  for (iter = c.begin(); iter != c.end(); ++iter, ++n) {
+    cout << n << ": idx=[" << iter->idx << "] start_epoch=[" 
+	 << iter->start_epoch << "] status=[" << iter->status 
+	 << "] current_frame=[" << iter->current_frame 
+	 << "] matches.size()=[" << iter->matches.size() 
+	 << "] successor=[" << iter->successor << "]"
+	 << endl;
+  }  
 }
 
 // ----------------------------------------------------------------------
@@ -87,34 +141,49 @@ string timestampfn(const string &fn) {
 // ----------------------------------------------------------------------
 
 time_t calc_epoch(const string &fn) {
-
-  MediaInfoLib::MediaInfo MI;
-  string timestring;      
-  wstring wfn(fn.begin(), fn.end());
-  if (MI.Open(wfn)) {
-    cout << "Analyzing " << fn << " with MediaInfo" << endl;
-    wstring wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Recorded_Date"));
-    string tmp(wrdate.begin(), wrdate.end());
-    timestring = tmp;
-    //wcout << MI.Option(__T("Info_Parameters"));
-    MI.Close();
-  }
   
-  if (!timestring.size()) {
-    string timefn = timestampfn(fn);
-    cout << "Recording date not found, expecting a timestamp file [" 
-	 << timefn << "]" << endl;
-
-    ifstream timefile(timefn);
-    if (!timefile) {
-      cerr << "ERROR:  Timestamp file not found [" << timefn << "]" << endl;
-      return 0;
-    }
+  string timestring, timefn = timestampfn(fn);
+  ifstream timefile(timefn);
+  if (timefile) {
+    cout << "Found timestamp file [" << timefn << "]" 
+	 << endl;
     if (!getline(timefile, timestring)) {
       cerr << "ERROR:  Timestamp file not readable [" << timefn << "]" << endl;
       return 0;
     }
+  } else {
+   cout << "No timestamp file [" << timefn << "] found, looking for metadata next" 
+	<< endl;
 
+   MediaInfoLib::MediaInfo MI;
+   wstring wfn(fn.begin(), fn.end());
+   if (MI.Open(wfn)) {
+     cout << "Analyzing " << fn << " with MediaInfo" << endl;
+     wstring wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Recorded_Date"));
+     string tmp(wrdate.begin(), wrdate.end());
+     timestring = tmp;
+     if (timestring.size())
+       cout << "  found Recorded_Date: " << timestring << endl;
+     else {
+       cout << "  Recorded_Date not found" << endl;
+       wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Encoded_Date"));
+       string tmp2(wrdate.begin(), wrdate.end());
+       if (tmp2.size()) {
+	 vector<string> tmpv;
+	 boost::split(tmpv, tmp2, boost::is_any_of(" "));
+	 timestring = tmpv[1]+"T"+tmpv[2]+"EEST";
+	 cout << "  found Encoded_date: " << timestring << endl;
+       } else
+	 cout << "  Encoded_date not found" << endl;
+     }
+     //wcout << MI.Option(__T("Info_Parameters"));
+     MI.Close();
+   }
+  }
+  
+  if (!timestring.size()) {
+    cerr << "ERROR: Timestamp not found" << endl;
+    return 0;
   }
 
   return calc_epoch_timestring(timestring);
@@ -227,12 +296,15 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  int nidx = -1, slideidx = 0;
-  time_t min_epoch = 9999999999;
+  int nidx = -1, slideidx = 0, startidx = -1;
+  time_t min_epoch = 9999999999, recstart_epoch = 9999999999;
   vector<capturestruct> captures;
   bool write_video = false;
   string outputfn = "output.avi", slidedir = ".", fixedslidefn = "";
+  string title;
+  size_t framerate = 25;
   map<time_t, double> hr;
+  bool debug_printcaptures = false;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -259,14 +331,38 @@ int main(int ac, char** av) {
       slideidx = atoi(arg.substr(11).c_str());
       continue;
 
+    } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
+      framerate = atoi(arg.substr(6).c_str());
+      continue;
+
+    } else if (boost::starts_with(arg, "--startidx=") && arg.size()>11) {
+      startidx = atoi(arg.substr(11).c_str());
+      continue;
+
     } else if (boost::starts_with(arg, "--hr=") && arg.size()>5) {
       process_hr(arg.substr(5), hr);
+      continue;
+
+    } else if (boost::starts_with(arg, "--title=") && arg.size()>8) {
+      title = arg.substr(8);
+      continue;
+
+    } else if (boost::starts_with(arg, "--debugcaps")) {
+      debug_printcaptures = true;
       continue;
     }
 
     vector<string> parts;
     boost::split(parts, arg, boost::is_any_of(":"));
-    if (parts.size() != 2) {
+
+    int epoch_offset = 0;
+    bool continue_from_previous = false;
+    if (parts.size() == 3) {
+      if (parts[2] == "C" || parts[2] == "c")
+	continue_from_previous = true;
+      else
+	epoch_offset = atoi(parts[2].c_str());    
+    } else if (parts.size() != 2) {
       cerr << "ERROR: Unable to parse [" << arg << "]" << endl;
       return 1;
     }
@@ -280,14 +376,33 @@ int main(int ac, char** av) {
       return 1;
     }
 
-    time_t epoch = calc_epoch(fn);
+    if (epoch_offset != 0)
+      cout << "Using an offset of " << epoch_offset << " for " << fn << endl;
+    time_t epoch = calc_epoch(fn) + epoch_offset;
     if (epoch == 0)
       continue;
+
 
     if (epoch<min_epoch)
       min_epoch = epoch;
 
+    if (startidx < 0) {
+      recstart_epoch = min_epoch;
+    } else if (idx == startidx && epoch<recstart_epoch) {
+      recstart_epoch = epoch;
+    }
+
     capturestruct c(idx, epoch, capture);
+
+    if (continue_from_previous) {
+      if (captures.size()) {
+	captures.back().successor = captures.size(); 
+	c.status = false;
+      } else {
+	cerr << "ERROR: First video cannot continue from previous"<< endl;
+	return 1;
+      }
+    }
 
     string matchesfn;
     if (idx == slideidx) {
@@ -335,6 +450,9 @@ int main(int ac, char** av) {
   cout << "nidx = " << nidx << ", min_epoch=" << min_epoch 
        << " (" << timedatestr(min_epoch) << ")" << endl;
 
+  if (debug_printcaptures)
+    print_captures(captures);
+
   Size totalsize(0,0);
   vector<Rect> capture_rects;
   Rect slide_rect(0,0,0,0);
@@ -381,7 +499,6 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  int framerate = 15;
   int fourcc = CV_FOURCC('m','p','4','v');
 
   time_t current_epoch = min_epoch; 
@@ -398,8 +515,10 @@ int main(int ac, char** av) {
   Mat logo = imread(REKNOW_LOGO, CV_LOAD_IMAGE_COLOR);
   Mat logo_mask = imread(REKNOW_LOGO_MASK, 0);
 
+  Mat logo_big = imread(REKNOW_LOGO_BIG, CV_LOAD_IMAGE_COLOR);
+  resize(logo_big, logo_big, Size(), 0.1, 0.1);
+
   string window_name = "video | q or esc to quit | s to take screenshot";
-  cout << "press q or esc to quit" << endl;
   namedWindow(window_name); //resizable window;
 
   vector<pair<bool, Mat> > frames;
@@ -412,12 +531,12 @@ int main(int ac, char** av) {
 
   double hrvalue = -1.0;
 
-  size_t nframe = 0;
+  size_t nframe = 0; // total nummber of frame processed
+  size_t nf = 1; // number of frame within a second
 
-  int nf = 1;
   string prevslidefn = "";
 
-  for (;; nf++) {
+  for (;; nf++, nframe++) {
 
     for (int i=0; i<nidx; i++)
       frames.at(i).first = false;
@@ -454,7 +573,8 @@ int main(int ac, char** av) {
 		Point(10,fr.rows-10), FONT_HERSHEY_PLAIN, 1.0,
 		Scalar(255,255,255));
 
-	if (idx==slideidx && captures.at(c).matches.find(current_frame) != captures.at(c).matches.end()) {
+	if (idx==slideidx && captures.at(c).matches.find(current_frame) != 
+	    captures.at(c).matches.end()) {
 	  slidefn = slidedir + "/" + captures.at(c).matches[current_frame];
 	} else if (fixedslidefn!="") {
 	  slidefn = fixedslidefn;
@@ -463,6 +583,8 @@ int main(int ac, char** av) {
       } else {
 	fr = Mat::zeros(360, 640, CV_8UC3);
 	captures.at(c).status = false;
+	if (captures.at(c).successor>0)
+	  captures.at(captures.at(c).successor).status = true;
       }
     }
 
@@ -470,55 +592,78 @@ int main(int ac, char** av) {
       break;
 
     Mat frame = Mat::zeros(totalsize, CV_8UC3);
+
+    if (current_epoch >= recstart_epoch && current_epoch < recstart_epoch+5) {
+      frame = Scalar(255,255,255);
+      Mat roi(frame, Rect((frame.cols-logo_big.cols)/2,20,
+			  logo_big.cols,logo_big.rows));
+      logo_big.copyTo(roi);
+      putText(frame, title.c_str(),
+	      Point(20, logo_big.rows+70), FONT_HERSHEY_SIMPLEX, 1.0,
+	      Scalar(0,0,0), 2.5);
+      string current_time = timedatestr(recstart_epoch);
+      putText(frame, current_time.c_str(),
+	      Point(20, logo_big.rows+110), FONT_HERSHEY_SIMPLEX, 1.0,
+	      Scalar(0,0,0), 2.5);
+
+    } else {
     
-    for (int i=0; i<nidx; i++) {
-      Mat roi(frame, capture_rects.at(i));
-      Mat& fr = frames.at(i).second;
-      fr.copyTo(roi);
-    }
-
-    if (slideidx!=-1 && slidefn != "") {
-      if (slides.find(slidefn) == slides.end()) {	
-	cout << "Loading " << slidefn << endl;
-	Mat slide_frame;
-	if (FileExists(slidefn))
-	  slide_frame = imread(slidefn, CV_LOAD_IMAGE_COLOR);
-	else {
-	  cerr << "ERROR: Slide file not found [" << slidefn << "]" << endl;
-	  logo.copyTo(slide_frame);	  
-	}
-	resize(slide_frame, slide_frame, slide_rect.size());
-	slides[slidefn] = slide_frame;
+      for (int i=0; i<nidx; i++) {
+	Mat roi(frame, capture_rects.at(i));
+	Mat& fr = frames.at(i).second;
+	fr.copyTo(roi);
       }
-      Mat roi(frame, slide_rect);
-      Mat& slide = slides[slidefn];
-      slide.copyTo(roi);
-    }
 
-    Mat roi(frame, Rect(frame.cols-logo.cols, 0, logo.cols, logo.rows));
-    logo.copyTo(roi, logo_mask);
+      if (slideidx!=-1 && slidefn != "") {
+	if (slides.find(slidefn) == slides.end()) {	
+	  cout << "Loading " << slidefn << endl;
+	  Mat slide_frame;
+	  if (FileExists(slidefn))
+	    slide_frame = imread(slidefn, CV_LOAD_IMAGE_COLOR);
+	  else {
+	    cerr << "ERROR: Slide file not found [" << slidefn << "]" << endl;
+	    logo.copyTo(slide_frame);	  
+	  }
+	  resize(slide_frame, slide_frame, slide_rect.size());
+	  slides[slidefn] = slide_frame;
+	}
+	Mat roi(frame, slide_rect);
+	Mat& slide = slides[slidefn];
+	slide.copyTo(roi);
+      }
 
-    string current_time = timedatestr(current_epoch);
-    rectangle(frame, Point(frame.cols-260,frame.rows-22), Point(frame.cols-10, frame.rows-8),
-	      Scalar(0,0,0), CV_FILLED);
-    putText(frame, current_time.c_str(),
-	    Point(frame.cols-250,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0,
-	    Scalar(255,255,255));
+      Mat roi(frame, Rect(frame.cols-logo.cols, 0, logo.cols, logo.rows));
+      logo.copyTo(roi, logo_mask);
 
-    if (hr.find(current_epoch) != hr.end()) {
-      hrvalue = hr[current_epoch];
-      //cout << "Setting HR to: " << hrvalue << endl;
+      string current_time = timedatestr(current_epoch);
+      rectangle(frame, Point(frame.cols-260,frame.rows-22),
+		Point(frame.cols-10, frame.rows-8),
+		Scalar(0,0,0), CV_FILLED);
+      putText(frame, current_time.c_str(),
+	      Point(frame.cols-250,frame.rows-10), FONT_HERSHEY_PLAIN, 1.0,
+	      Scalar(255,255,255));
+
+      if (hr.find(current_epoch) != hr.end()) {
+	hrvalue = hr[current_epoch];
+	//cout << "Setting HR to: " << hrvalue << endl;
+      }
+      if (hrvalue > 0.0) {
+	std::string hrstr = boost::lexical_cast<std::string>(round(hrvalue));
+	putText(frame, hrstr.c_str(),
+		Point(frame.cols-150,frame.rows-50), FONT_HERSHEY_PLAIN, 5.0,
+		Scalar(0,0,255), 8);
+      }
+      if (current_epoch < recstart_epoch) {
+	string recstart_text = "Recording will start at " + 
+	  timedatestr(recstart_epoch);
+	putText(frame, recstart_text.c_str(), Point(10,20), FONT_HERSHEY_PLAIN, 
+		1.0, Scalar(0,0,255));
+      }
     }
-    if (hrvalue > 0.0) {
-      std::string hrstr = boost::lexical_cast<std::string>(round(hrvalue));
-      putText(frame, hrstr.c_str(),
-	      Point(frame.cols-150,frame.rows-50), FONT_HERSHEY_PLAIN, 5.0,
-	      Scalar(0,0,255), 8);
-    }
-      
 
     if (write_video) {
-      video << frame;
+      if (current_epoch >= recstart_epoch)
+	video << frame;
 
       if (slidefn != "" && slidefn != prevslidefn) {
 	slideoutfile << current_epoch << " " << slidefn << endl;

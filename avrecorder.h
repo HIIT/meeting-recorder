@@ -68,12 +68,13 @@ signals:
     void stateChanged(QMediaRecorder::State);
     void cameraOutput(QString);
     void cameraFramerate(QString);
-    void cameraStateChanged(int, int);
+    void cameraPowerChanged(int, int);
 
 public slots:
     void processBuffer(const QAudioBuffer&);
     void processQImage(int n, const QImage qimg);
     void processCameraInfo(int, int, int);
+    void disableCameraCheckbox(int n);
     void displayErrorMessage(const QString&);
     void uncheckEvent1();
     void uncheckEvent2();
@@ -82,6 +83,7 @@ public slots:
 
 private slots:
     void setOutputLocation();
+    bool OutputLocationEmptyOrOk();
     void upload();
     void togglePause();
     void toggleRecord();
