@@ -108,7 +108,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     record_video = false;
 
 #if defined(Q_OS_WIN)
-    fourcc = CV_FOURCC('D','I','V','X');
+    fourcc = -1;
 #else
     fourcc = CV_FOURCC('m','p','4','v');
 #endif
