@@ -1,0 +1,10 @@
+Making releases in Windows:
+
+Git Shell: 
+
+git pull
+
+Cmd.exe:
+
+\Users\localadmin_jmakoske\Qt\5.4\mingw491_32\bin\qmake.exe mrecorder.pro
+\Users\localadmin_jmakoske\Qt\Tools\mingw491_32\bin\mingw32-make.exe
