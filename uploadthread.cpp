@@ -243,12 +243,13 @@ LIBSSH2_AGENT* UploadThread::trySshAgent(LIBSSH2_SESSION* session) {
   while (1) {
     rc = libssh2_agent_get_identity(agent, &identity, prev_identity);
 
-    if (rc == 1)
-      break;
+    if (rc == 1) {
+      emit uploadMessage("failure due reaching end of public keys");
+      return shutdownAgent(agent);
+    }
 
     if (rc < 0) {
-      emit uploadMessage("failure obtaining identity from ssh-agent support");
-      rc = 1;
+      emit uploadMessage("failure in obtaining identity from ssh-agent");
       return shutdownAgent(agent);
     }
 
