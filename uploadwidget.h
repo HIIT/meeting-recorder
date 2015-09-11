@@ -24,7 +24,7 @@ public slots:
     void preferences();
     void preferences_new();
     void startUpload();
-    void uploadOK();
+    void uploadFinished();
     void passwordWidget();
     void showHideDetails(int);
 
@@ -41,6 +41,8 @@ private:
     QPlainTextEdit *txt;
     QProgressBar *pbar;
     int pbar_value;
+    QPushButton *prefButton;
+    QPushButton *startButton;
     QPushButton *exitButton;
 
     QSettings settings;

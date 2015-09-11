@@ -36,9 +36,9 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
 	appendText("using server_path:" + server_path());
     }
 
-    QPushButton *prefButton = new QPushButton("Preferences");
+    prefButton = new QPushButton("Preferences");
     prefButton->setAutoDefault(false);
-    QPushButton *startButton = new QPushButton("Start");
+    startButton = new QPushButton("Start");
     startButton->setAutoDefault(false);
     exitButton = new QPushButton("Cancel");
     exitButton->setAutoDefault(false);
@@ -70,7 +70,7 @@ UploadWidget::UploadWidget(QWidget *parent, QString directory) : QDialog(parent)
     connect(uploader, SIGNAL(nBlocks(int)),
 	    this, SLOT(setMaximumProgressbar(int)));
     connect(uploader, SIGNAL(uploadFinished()),
-	    this, SLOT(uploadOK()));
+	    this, SLOT(uploadFinished()));
     connect(uploader, SIGNAL(passwordRequested()),
 	    this, SLOT(passwordWidget()));
     connect(this, SIGNAL(passwordEntered(const QString&)),
@@ -163,6 +163,9 @@ void UploadWidget::preferences_new() {
 
 void UploadWidget::startUpload() {
     uploader->setPreferences(username(), server_ip(), server_path());
+    prefButton->setEnabled(false);
+    startButton->setEnabled(false);
+    exitButton->setText("Cancel");
     uploader->start();
 }
 
@@ -187,7 +190,9 @@ QString UploadWidget::server_path() {
 
 // ---------------------------------------------------------------------
 
-void UploadWidget::uploadOK() {
+void UploadWidget::uploadFinished() {
+    prefButton->setEnabled(true);
+    startButton->setEnabled(true);
     exitButton->setText("OK");
 }
 
