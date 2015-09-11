@@ -252,9 +252,8 @@ LIBSSH2_AGENT* UploadThread::trySshAgent(LIBSSH2_SESSION* session) {
       return shutdownAgent(agent);
     }
 
-    if (1) {
-      //if (libssh2_agent_userauth(agent, username.toStdString().c_str(),
-      //			       identity)) {
+    if (libssh2_agent_userauth(agent, username.toStdString().c_str(),
+    			       identity)) {
       emit uploadMessage(QString("authentication with username %1 and "
 				 "public key %2 failed")
 			 .arg(username).arg(identity->comment));
