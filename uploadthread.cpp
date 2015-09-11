@@ -103,7 +103,7 @@ void UploadThread::run() Q_DECL_OVERRIDE {
   if (!agent) {
 
   // authentication by public key:
-  emit uploadMessage("no agent found, trying authentication without it");
+  emit uploadMessage("ssh-agent failed or not found, trying authentication without it");
   QString pubkey = QDir::homePath()+"/.ssh/id_rsa.pub";
   QString prikey = QDir::homePath()+"/.ssh/id_rsa";
   emit uploadMessage("using public key: "+ pubkey);
@@ -120,6 +120,7 @@ void UploadThread::run() Q_DECL_OVERRIDE {
     emit uploadMessage(QString("authentication by public key failed: %1").arg(rc));
 
     //authentication via password
+    emit uploadMessage("trying to authenticate with password");
     mutex.lock();
     emit passwordRequested();
     passwordNeeded.wait(&mutex);
@@ -179,6 +180,7 @@ shutdown:
   libssh2_exit();
 
   emit uploadMessage("uploadthread ending");
+  emit uploadFinished();
 }
 
 // ---------------------------------------------------------------------
@@ -214,6 +216,8 @@ bool UploadThread::checkDirectory(LIBSSH2_SFTP *sftp_session,
 
 // Connect to the ssh-agent 
 LIBSSH2_AGENT* UploadThread::trySshAgent(LIBSSH2_SESSION* session) {
+
+  emit uploadMessage("trying to authenticate with ssh-agent");
   int rc = 0;
   LIBSSH2_AGENT *agent = libssh2_agent_init(session);
 
@@ -248,11 +252,14 @@ LIBSSH2_AGENT* UploadThread::trySshAgent(LIBSSH2_SESSION* session) {
       return shutdownAgent(agent);
     }
 
-    if (libssh2_agent_userauth(agent, username.toStdString().c_str(),
-			       identity)) {
+    if (1) {
+      //if (libssh2_agent_userauth(agent, username.toStdString().c_str(),
+      //			       identity)) {
       emit uploadMessage(QString("authentication with username %1 and "
 				 "public key %2 failed")
 			 .arg(username).arg(identity->comment));
+      return shutdownAgent(agent);
+
     } else {
       emit uploadMessage(QString("authentication with username %1 and "
 				 "public key %2 succeeded")
@@ -341,7 +348,6 @@ bool UploadThread::processFile(LIBSSH2_SFTP *sftp_session,
     fclose(local);  
 
   emit uploadMessage("data sent successfully");
-  emit uploadFinished();
 
   return true;
 }
