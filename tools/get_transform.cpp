@@ -66,9 +66,9 @@ void transform_image(Mat &src, const vector<Point2f> &pp) {
     src_pts[ii] = pp.at(ii);
   Point2f dst_pts[4];
   dst_pts[0] = Point(0,0);
-  dst_pts[1] = Point(src.cols,0);
-  dst_pts[2] = Point(src.cols, src.rows);
-  dst_pts[3] = Point(0,src.rows);
+  dst_pts[1] = Point(src.cols/2,0);
+  dst_pts[2] = Point(src.cols/2, src.rows/2);
+  dst_pts[3] = Point(0,src.rows/2);
   Mat M = getPerspectiveTransform(src_pts, dst_pts);
   FileStorage fs("transform.yml", FileStorage::WRITE);
   fs << "M" << M;
