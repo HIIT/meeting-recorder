@@ -289,6 +289,17 @@ bool process_hr(string fn, map<time_t, double> &data) {
 
 // ----------------------------------------------------------------------
 
+void initialize_output(size_t width, size_t height, Size &totalsize,
+		       vector<Rect> &capture_rects) {
+  totalsize = Size(640*width,360*height);
+  for (size_t jj=0; jj<height; jj++)
+    for (size_t ii=0; ii<width; ii++)
+      capture_rects.push_back(Rect(640*ii,360*jj,640,360));
+}
+
+
+// ----------------------------------------------------------------------
+
 int main(int ac, char** av) {
 
   if (ac <= 1) {
@@ -477,13 +488,15 @@ int main(int ac, char** av) {
       capture_rects.push_back(Rect(0,360,640,360));
       slide_rect = Rect(640,360,640,360);
       break;
+    default:
+      cerr << "ERROR: unsupported nidx=" << nidx
+	   << " for slideidx=" << slideidx << endl;
+      return 1;
     }
   } else {
     switch (nidx) {
     case (2):
-      totalsize = Size(640,360*2);
-      capture_rects.push_back(Rect(0,0,640,360));
-      capture_rects.push_back(Rect(0,360,640,360));
+      initialize_output(1, 2, totalsize, capture_rects);
       break;
     case (3):
       totalsize = Size(640*3,360*2);
@@ -491,6 +504,22 @@ int main(int ac, char** av) {
       capture_rects.push_back(Rect(0,0,640,360));
       capture_rects.push_back(Rect(0,360,640,360));
       break;
+    case (4):
+      initialize_output(2, 2, totalsize, capture_rects);
+      break;
+    case (5):
+    case (6):
+      initialize_output(3, 2, totalsize, capture_rects);
+      break;
+    case (7):
+    case (8):
+    case (9):
+      initialize_output(3, 3, totalsize, capture_rects);
+      break;
+    default:
+      cerr << "ERROR: unsupported nidx=" << nidx
+	   << " for slideidx=" << slideidx << endl;
+      return 1;
     }
   }
 
