@@ -70,6 +70,10 @@ void transform_image(Mat &src, const vector<Point2f> &pp) {
   dst_pts[2] = Point(src.cols, src.rows);
   dst_pts[3] = Point(0,src.rows);
   Mat M = getPerspectiveTransform(src_pts, dst_pts);
+  FileStorage fs("transform.yml", FileStorage::WRITE);
+  fs << "M" << M;
+  fs << "pp" << pp;
+  fs.release();
   warpPerspective(src, src, M, Size(src.cols, src.rows));
 }
 
