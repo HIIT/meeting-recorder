@@ -50,7 +50,7 @@ using namespace std;
 struct capturestruct {
   capturestruct(int _idx, time_t _start_epoch, VideoCapture _cap) : 
     idx(_idx), start_epoch(_start_epoch), status(true), 
-    current_frame(0), cap(_cap), successor(0) { }
+    current_frame(0), cap(_cap), successor(0), transform(false) { }
   int idx;
   time_t start_epoch;
   bool status;
@@ -58,6 +58,7 @@ struct capturestruct {
   map <int, string> matches;
   VideoCapture cap; 
   size_t successor;
+  bool transform;
 };
 
 // ----------------------------------------------------------------------
@@ -83,6 +84,8 @@ void help(char** av) {
        << "path to the slide pngs" << endl
        << "  [--slideidx=X]         : " 
        << "idx of videos to match slides against, use \"-1\" for none" << endl
+       << "  [--transidx=X]         : " 
+       << "idx of videos to perspective-transform with \"transform.yml\"" << endl
        << "  [--startidx=X]         : " 
        << "idx of videos to start the actual recording, by default not used"
        << endl
@@ -289,6 +292,17 @@ bool process_hr(string fn, map<time_t, double> &data) {
 
 // ----------------------------------------------------------------------
 
+void transform_frame(Mat &src, const Mat &M) {
+
+  Mat image = Mat::zeros(360*2, 640*2, CV_8UC3);
+  Mat roi(image, Rect(640/2, 360/2, 640, 360));
+  src.copyTo(roi);
+
+  warpPerspective(image, src, M, Size(src.cols, src.rows));
+}
+
+// ----------------------------------------------------------------------
+
 void initialize_output(size_t width, size_t height, Size &totalsize,
 		       vector<Rect> &capture_rects) {
   totalsize = Size(640*width,360*height);
@@ -307,7 +321,7 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  int nidx = -1, slideidx = 0, startidx = -1;
+  int nidx = -1, slideidx = 0, startidx = -1, transidx = -1;
   time_t min_epoch = 9999999999, recstart_epoch = 9999999999;
   vector<capturestruct> captures;
   bool write_video = false;
@@ -340,6 +354,10 @@ int main(int ac, char** av) {
 
     } else if (boost::starts_with(arg, "--slideidx=") && arg.size()>11) {
       slideidx = atoi(arg.substr(11).c_str());
+      continue;
+
+    } else if (boost::starts_with(arg, "--transidx=") && arg.size()>11) {
+      transidx = atoi(arg.substr(11).c_str());
       continue;
 
     } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
@@ -449,6 +467,9 @@ int main(int ac, char** av) {
 	prev_b = b;
       }
     }
+
+    if (idx == transidx)
+      c.transform = true;
 
     captures.push_back(c);
 
@@ -560,7 +581,19 @@ int main(int ac, char** av) {
 
   double hrvalue = -1.0;
 
-  size_t nframe = 0; // total nummber of frame processed
+  Mat M;
+  if (transidx > -1) {
+    FileStorage fs;
+    string transfn = "transform.yml";
+    fs.open(transfn, FileStorage::READ);
+    if (!fs.isOpened()) {
+      cerr << "ERROR: failed to open " << transfn << endl;
+      return 1;
+    }
+    fs["M"] >> M;
+  }
+
+  size_t nframe = 0; // total number of frame processed
   size_t nf = 1; // number of frame within a second
 
   string prevslidefn = "";
@@ -608,6 +641,8 @@ int main(int ac, char** av) {
 	} else if (fixedslidefn!="") {
 	  slidefn = fixedslidefn;
 	}
+	if (idx==transidx)
+	  transform_frame(fr, M);
 	current_frame++;
       } else {
 	fr = Mat::zeros(360, 640, CV_8UC3);
