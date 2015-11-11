@@ -168,14 +168,23 @@ time_t calc_epoch(const string &fn) {
      if (timestring.size())
        cout << "  found Recorded_Date: " << timestring << endl;
      else {
-       cout << "  Recorded_Date not found" << endl;
+       wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("com.apple.quicktime.creationdate"));
+       string tmpq(wrdate.begin(), wrdate.end());
+       timestring = tmpq;
+     }
+     if (timestring.size())
+       cout << "  found com.apple.quicktime.creationdate: " << timestring << endl;     
+     else {
        wrdate = MI.Get(MediaInfoLib::Stream_General, 0, __T("Encoded_Date"));
        string tmp2(wrdate.begin(), wrdate.end());
        if (tmp2.size()) {
 	 vector<string> tmpv;
 	 boost::split(tmpv, tmp2, boost::is_any_of(" "));
-	 timestring = tmpv[1]+"T"+tmpv[2]+"EEST";
-	 cout << "  found Encoded_date: " << timestring << endl;
+	 string tz = "EEST"; // Should not be set like this
+	 if (tmpv[0] == "UTCxxx")
+	   tz = "";
+	 timestring = tmpv[1]+"T"+tmpv[2]+tz;
+	 cout << "  found Encoded_date: [" << tmp2 << "] => [" << timestring << "]" << endl;
        } else
 	 cout << "  Encoded_date not found" << endl;
      }
@@ -197,7 +206,7 @@ time_t calc_epoch(const string &fn) {
 time_t calc_epoch_timestring(const string &_timestring, bool verbose) {
 
   string timestring = _timestring;
-  string timezone;
+  string timezone = "";
   int tzinsecs = 0;
 
   if (boost::find_first(timestring, "EET")) {
@@ -211,21 +220,21 @@ time_t calc_epoch_timestring(const string &_timestring, bool verbose) {
   } else {
     vector<string> tmp;  
     boost::split(tmp, timestring, boost::is_any_of("+"));
-    if (tmp.size()<2) {
-      cerr << "ERROR:  Time zone missing from timestring [" 
-	   << timestring << "]" << endl;
-      return 0;
-    }
-    timestring = tmp.at(0);
-    timezone = tmp.at(1);
-    if (timezone == "0200")
-      tzinsecs = 2*60*60;
-    else if (timezone == "0300")
-      tzinsecs = 3*60*60;
-    else {
-      cerr << "ERROR:  Unrecognized timezone: [" << timezone << "]" << endl;
-      return 0;
-    }
+    if (tmp.size()==2) {
+      timestring = tmp.at(0);
+      timezone = tmp.at(1);
+      if (timezone == "0200")
+	tzinsecs = 2*60*60;
+      else if (timezone == "0300")
+	tzinsecs = 3*60*60;
+      else {
+	cerr << "ERROR:  Unrecognized timezone: [" << timezone 
+	     << "]" << endl;
+	return 0;
+      }
+    } else
+      cout << "Time zone missing from timestring [" 
+	   << timestring << "], assuming this is UTC" << endl;
   }
 
   boost::replace_first(timestring, "T", " ");
@@ -328,6 +337,7 @@ int main(int ac, char** av) {
   string outputfn = "output.avi", slidedir = ".", fixedslidefn = "";
   string title;
   size_t framerate = 25;
+  //map <size_t, string> transforms;
   map<time_t, double> hr;
   bool debug_printcaptures = false;
 
@@ -358,6 +368,13 @@ int main(int ac, char** av) {
 
     } else if (boost::starts_with(arg, "--transidx=") && arg.size()>11) {
       transidx = atoi(arg.substr(11).c_str());
+      // new code for multiple transforms:
+      // vector<string> tr_parts;
+      // boost::split(tr_parts, arg.substr(11), boost::is_any_of(":"));
+      // string transfn = "transform.yml";
+      // if (tr_parts.size()==2)
+      // 	transfn = tr_parts[1];
+      // transforms[atoi(tr_parts[0].c_str())] = transfn
       continue;
 
     } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
@@ -380,6 +397,8 @@ int main(int ac, char** av) {
       debug_printcaptures = true;
       continue;
     }
+
+    cout << "-------------------------------------------------" << endl;
 
     vector<string> parts;
     boost::split(parts, arg, boost::is_any_of(":"));
@@ -478,6 +497,7 @@ int main(int ac, char** av) {
 	 << ") matchesfn=[" << matchesfn << "]" << endl;
 
   }
+  cout << "-------------------------------------------------" << endl;
   nidx++;
   cout << "nidx = " << nidx << ", min_epoch=" << min_epoch 
        << " (" << timedatestr(min_epoch) << ")" << endl;
