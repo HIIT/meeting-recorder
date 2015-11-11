@@ -50,7 +50,8 @@ using namespace std;
 struct capturestruct {
   capturestruct(int _idx, time_t _start_epoch, VideoCapture _cap) : 
     idx(_idx), start_epoch(_start_epoch), status(true), 
-    current_frame(0), cap(_cap), successor(0), transform(false) { }
+    current_frame(0), cap(_cap), successor(0), transform(false), 
+    rotate(false) { }
   int idx;
   time_t start_epoch;
   bool status;
@@ -59,6 +60,7 @@ struct capturestruct {
   VideoCapture cap; 
   size_t successor;
   bool transform;
+  bool rotate;
 };
 
 // ----------------------------------------------------------------------
@@ -69,12 +71,13 @@ time_t calc_epoch_timestring(const string&, bool = true);
 
 void help(char** av) {
   cout << "Usage:" << endl << av[0] 
-       << " [options] idx:videofile[:offset] [idx:videofile[:offset] ...] "
+       << " [options] idx[R]:videofile[:offset] [idx:videofile[:offset] ...] "
        << endl << endl
        << "Arguments:" << endl
-       << "  idx       : index of video file, starting from 0" << endl
+       << "  idx       : index of video file, starting from 0," << endl
+       << "              optional \"R\" is for rotating the frame" << endl
        << "  videofile : full path to video file" << endl
-       << "  offset    : optional offset for extracted starting timestamp," 
+       << "  offset    : optional offset for extracted starting timestamp," << endl
        << "              the value \"C\" is for continuing from previous video"
        << endl << endl
        << "Options:" << endl
@@ -101,15 +104,27 @@ void help(char** av) {
 
 // ----------------------------------------------------------------------
 
+string timedatestr(time_t epoch) {
+  string timedate(ctime(&epoch));
+  if (timedate.size()>0)
+    timedate.erase(timedate.size()-1);
+  return timedate;
+}
+
+// ----------------------------------------------------------------------
+
 void print_captures(vector<capturestruct> &c) {
   vector<capturestruct>::const_iterator iter;
   size_t n=0;
   for (iter = c.begin(); iter != c.end(); ++iter, ++n) {
     cout << n << ": idx=[" << iter->idx << "] start_epoch=[" 
-	 << iter->start_epoch << "] status=[" << iter->status 
+	 << iter->start_epoch << "] (" << timedatestr(iter->start_epoch) 
+	 << ") status=[" << iter->status 
 	 << "] current_frame=[" << iter->current_frame 
 	 << "] matches.size()=[" << iter->matches.size() 
 	 << "] successor=[" << iter->successor << "]"
+	 << "] transform=[" << iter->transform << "]"
+	 << "] rotate=[" << iter->rotate << "]"
 	 << endl;
   }  
 }
@@ -253,15 +268,6 @@ time_t calc_epoch_timestring(const string &_timestring, bool verbose) {
 
 // ----------------------------------------------------------------------
 
-string timedatestr(time_t epoch) {
-  string timedate(ctime(&epoch));
-  if (timedate.size()>0)
-    timedate.erase(timedate.size()-1);
-  return timedate;
-}
-
-// ----------------------------------------------------------------------
-
 bool process_hr(string fn, map<time_t, double> &data) {
 
   ifstream hrfile(fn);
@@ -339,7 +345,7 @@ int main(int ac, char** av) {
   size_t framerate = 25;
   //map <size_t, string> transforms;
   map<time_t, double> hr;
-  bool debug_printcaptures = false;
+  bool debug_printcaptures = true;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -414,6 +420,13 @@ int main(int ac, char** av) {
       cerr << "ERROR: Unable to parse [" << arg << "]" << endl;
       return 1;
     }
+    
+    bool rotate = false;
+    if (boost::find_first(parts[0], "R")) {
+      boost::erase_first(parts[0], "R");
+      rotate = true;
+    }
+
     int idx = atoi(parts[0].c_str());    
     string &fn = parts[1];
     if (idx > nidx)
@@ -442,6 +455,9 @@ int main(int ac, char** av) {
 
     capturestruct c(idx, epoch, capture);
 
+    if (rotate)
+      c.rotate = true;
+    
     if (continue_from_previous) {
       if (captures.size()) {
 	captures.back().successor = captures.size(); 
@@ -645,6 +661,9 @@ int main(int ac, char** av) {
       if (frameok)
 	cout << "Overwriting idx=" << idx << " c=" << c << endl;
       frameok = vc.read(fr);
+      if (captures.at(c).rotate)
+	flip(fr, fr, -1);
+
       if (frameok) {
 	resize(fr, fr, Size(640, 360));
 	stringstream ss;
