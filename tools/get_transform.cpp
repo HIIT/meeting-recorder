@@ -38,7 +38,7 @@ using namespace std;
 // ----------------------------------------------------------------------
 
 void help(char** av) {
-  cout << "Usage:" << endl << av[0];
+  cout << "Usage:" << endl << av[0] << " [--rotate] file" << endl;
 }
 
 // ----------------------------------------------------------------------
@@ -87,11 +87,15 @@ int main(int ac, char** av) {
   }
 
   VideoCapture capture;
+  bool rotate = false;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
     
-    // options here
+    if (boost::starts_with(arg, "--rotate")) {
+      rotate = true;
+      continue;
+    }
 
     capture.open(arg);
     if (!capture.isOpened()) {
@@ -115,6 +119,9 @@ int main(int ac, char** av) {
   while (1) {
     if (read_frames) {
       frameok = capture.read(frame);
+      if (rotate)
+	flip(frame, frame, -1);
+      
       if (!frameok) {
 	cerr << "ERROR: Reading a frame from video failed" << endl;
 	return 1;      
