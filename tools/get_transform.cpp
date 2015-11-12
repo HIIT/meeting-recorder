@@ -63,7 +63,7 @@ void transform_image(Mat &src, const vector<Point2f> &pp) {
   }
   Point2f src_pts[4];
   for (size_t ii=0; ii<4; ii++)
-    src_pts[ii] = pp.at(ii);
+    src_pts[ii] = 3.0*(pp.at(ii)-Point2f(640/2, 360/2));
   Point2f dst_pts[4];
   dst_pts[0] = Point(0,0);
   dst_pts[1] = Point(src.cols/2,0);
@@ -107,9 +107,10 @@ int main(int ac, char** av) {
 
   namedWindow("Select corners", CV_WINDOW_AUTOSIZE);
 
-  Mat frame;
+  Mat frame, smallframe;
   bool frameok; 
   bool read_frames = true;
+  bool first = true;
 
   Point p(0,0), q(0,0);
   vector<Point2f> pp;
@@ -119,14 +120,20 @@ int main(int ac, char** av) {
   while (1) {
     if (read_frames) {
       frameok = capture.read(frame);
-      if (rotate)
-	flip(frame, frame, -1);
-      
       if (!frameok) {
 	cerr << "ERROR: Reading a frame from video failed" << endl;
 	return 1;      
       }
-      resize(frame, frame, Size(640, 360));
+
+      if (first) {
+	cout << "Input size: " << frame.cols << "x" << frame.rows << endl;
+	first = false;
+      }
+
+      if (rotate)
+	flip(frame, frame, -1);
+      
+      resize(frame, smallframe, Size(640, 360));
     }
 
     if (p != q) {
@@ -137,7 +144,7 @@ int main(int ac, char** av) {
 
     Mat image = Mat::zeros(360*2, 640*2, CV_8UC3);
     Mat roi(image, Rect(640/2, 360/2, 640, 360));
-    frame.copyTo(roi);
+    smallframe.copyTo(roi);
 
     vector<Point2f>::const_iterator iter;
     for (iter = pp.begin(); iter != pp.end(); ++iter)
@@ -157,8 +164,9 @@ int main(int ac, char** av) {
       break;
     case 't':
     case 'T':
-      transform_image(image, pp);
-      imshow("Select corners", image);
+      transform_image(frame, pp);
+      resize(frame, smallframe, Size(640*2, 360*2));
+      imshow("Select corners", smallframe);
       waitKey(0);
     }
 
