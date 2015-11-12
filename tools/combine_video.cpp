@@ -122,10 +122,10 @@ void print_captures(vector<capturestruct> &c) {
 	 << ") status=[" << iter->status 
 	 << "] current_frame=[" << iter->current_frame 
 	 << "] matches.size()=[" << iter->matches.size() 
-	 << "] successor=[" << iter->successor << "]"
-	 << "] transform=[" << iter->transform << "]"
-	 << "] rotate=[" << iter->rotate << "]"
-	 << endl;
+	 << "] successor=[" << iter->successor
+	 << "] transform=[" << iter->transform
+	 << "] rotate=[" << iter->rotate
+	 << "]" << endl;
   }  
 }
 
@@ -461,6 +461,7 @@ int main(int ac, char** av) {
     if (continue_from_previous) {
       if (captures.size()) {
 	captures.back().successor = captures.size(); 
+	c.start_epoch = captures.back().start_epoch;
 	c.status = false;
       } else {
 	cerr << "ERROR: First video cannot continue from previous"<< endl;
