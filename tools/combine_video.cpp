@@ -766,8 +766,13 @@ int main(int ac, char** av) {
     }
 
     if (write_video) {
-      if (current_epoch >= recstart_epoch)
+      if (current_epoch >= recstart_epoch) {
 	video << frame;
+
+	if (nf==1 && (current_epoch-recstart_epoch)%600==0)
+	  cout << "Processing at [" << current_epoch << "] (" << timedatestr(current_epoch) 
+	       << ")" << endl;
+      }
 
       if (slidefn != "" && slidefn != prevslidefn) {
 	slideoutfile << current_epoch << " " << slidefn << endl;
