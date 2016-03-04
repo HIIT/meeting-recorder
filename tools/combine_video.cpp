@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 University of Helsinki
+Copyright (c) 2015-2016 University of Helsinki
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
@@ -326,6 +326,13 @@ void initialize_output(size_t width, size_t height, Size &totalsize,
       capture_rects.push_back(Rect(640*ii,360*jj,640,360));
 }
 
+
+// ----------------------------------------------------------------------
+
+void resize_frame(Mat &frame, const Size &frsize) {
+  resize(frame, frame, frsize);
+  return; 
+}
 
 // ----------------------------------------------------------------------
 
@@ -666,7 +673,7 @@ int main(int ac, char** av) {
 	flip(fr, fr, -1);
 
       if (frameok) {
-	resize(fr, fr, Size(640, 360));
+	resize_frame(fr, Size(640, 360));
 	stringstream ss;
 	ss << current_frame;
 	rectangle(fr, Point(2,fr.rows-22), Point(100, fr.rows-8),
