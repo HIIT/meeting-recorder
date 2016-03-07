@@ -196,7 +196,7 @@ time_t calc_epoch(const string &fn) {
        if (tmp2.size()) {
 	 vector<string> tmpv;
 	 boost::split(tmpv, tmp2, boost::is_any_of(" "));
-	 string tz = "EEST"; // Should not be set like this
+	 string tz = "EET"; // "EEST" Should not be set like this
 	 if (tmpv[0] == "UTCxxx")
 	   tz = "";
 	 timestring = tmpv[1]+"T"+tmpv[2]+tz;
