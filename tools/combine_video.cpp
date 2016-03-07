@@ -71,11 +71,12 @@ time_t calc_epoch_timestring(const string&, bool = true);
 
 void help(char** av) {
   cout << "Usage:" << endl << av[0] 
-       << " [options] idx[R]:videofile[:offset] [idx:videofile[:offset] ...] "
+       << " [options] idx[R|W]:videofile[:offset] [idx:videofile[:offset] ...] "
        << endl << endl
        << "Arguments:" << endl
        << "  idx       : index of video file, starting from 0," << endl
        << "              optional \"R\" is for rotating the frame" << endl
+       << "              optional \"W\" is for double-width" << endl
        << "  videofile : full path to video file" << endl
        << "  offset    : optional offset for extracted starting timestamp," << endl
        << "              the value \"C\" is for continuing from previous video"
@@ -86,7 +87,7 @@ void help(char** av) {
        << "  [--slides=X]           : "
        << "path to the slide pngs" << endl
        << "  [--slideidx=X]         : " 
-       << "idx of videos to match slides against, use \"-1\" for none" << endl
+       << "idx of videos to match slides against, not used by default" << endl
        << "  [--transidx=X]         : " 
        << "idx of videos to perspective-transform with \"transform.yml\"" << endl
        << "  [--startidx=X]         : " 
@@ -307,6 +308,26 @@ bool process_hr(string fn, map<time_t, double> &data) {
 
 // ----------------------------------------------------------------------
 
+bool resize_frame(Mat &frame, const Size &osize) {
+
+  float o_aspect_ratio = float(osize.width)/float(osize.height);
+  float f_aspect_ratio = float(frame.cols)/float(frame.rows);
+
+  if (o_aspect_ratio-f_aspect_ratio<0.01) {
+    resize(frame, frame, osize);
+    return true; 
+  }
+
+  size_t roi_height = size_t(frame.cols/o_aspect_ratio);
+  size_t roi_displacement = (frame.rows-roi_height)/2;
+  Mat roi(frame, Rect(0, roi_displacement, frame.cols, roi_height));
+  resize(roi, frame, osize);
+
+  return true;
+}
+
+// ----------------------------------------------------------------------
+
 void transform_frame(Mat &src, const Mat &M) {
 
   Mat image = Mat::zeros(360*2, 640*2, CV_8UC3);
@@ -327,12 +348,6 @@ void initialize_output(size_t width, size_t height, Size &totalsize,
 }
 
 
-// ----------------------------------------------------------------------
-
-void resize_frame(Mat &frame, const Size &frsize) {
-  resize(frame, frame, frsize);
-  return; 
-}
 
 // ----------------------------------------------------------------------
 
@@ -343,7 +358,7 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  int nidx = -1, slideidx = 0, startidx = -1, transidx = -1;
+  int nidx = -1, slideidx = -1, startidx = -1, transidx = -1;
   time_t min_epoch = 9999999999, recstart_epoch = 9999999999;
   vector<capturestruct> captures;
   bool write_video = false;
@@ -353,6 +368,7 @@ int main(int ac, char** av) {
   //map <size_t, string> transforms;
   map<time_t, double> hr;
   bool debug_printcaptures = true;
+  bool doublewidth_zero = false;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -432,6 +448,9 @@ int main(int ac, char** av) {
     if (boost::find_first(parts[0], "R")) {
       boost::erase_first(parts[0], "R");
       rotate = true;
+    } else if (boost::find_first(parts[0], "W")) {
+      boost::erase_first(parts[0], "W");
+      doublewidth_zero = true;
     }
 
     int idx = atoi(parts[0].c_str());    
@@ -558,10 +577,17 @@ int main(int ac, char** av) {
 	   << " for slideidx=" << slideidx << endl;
       return 1;
     }
+
   } else {
     switch (nidx) {
     case (2):
-      initialize_output(1, 2, totalsize, capture_rects);
+      if (!doublewidth_zero)
+        initialize_output(1, 2, totalsize, capture_rects);
+      else {
+        totalsize = Size(640*2,360*2);
+        capture_rects.push_back(Rect(0,0,640*2,360));
+        capture_rects.push_back(Rect(0,360,640,360));
+      }
       break;
     case (3):
       totalsize = Size(640*3,360*2);
@@ -673,7 +699,11 @@ int main(int ac, char** av) {
 	flip(fr, fr, -1);
 
       if (frameok) {
-	resize_frame(fr, Size(640, 360));
+        if (idx==0 && doublewidth_zero)
+          resize_frame(fr, Size(640*2, 360));
+        else
+          resize_frame(fr, Size(640, 360));
+
 	stringstream ss;
 	ss << current_frame;
 	rectangle(fr, Point(2,fr.rows-22), Point(100, fr.rows-8),
