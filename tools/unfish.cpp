@@ -43,6 +43,9 @@ void help(char** av) {
        << "Options:" << endl
        << "  [--todisk|--todisk=X]  : " 
        << "save output video to disk as \"output.avi\" or as \"X\"" 
+       << endl
+       << "  [--fps=X]              : "
+       << "set framerate to X, default is 5"
        << endl;
 
 }
@@ -111,6 +114,7 @@ int main(int ac, char** av) {
   bool write_video = false;
   string outputfn = "output.avi";
   VideoCapture capture;
+  size_t framerate = 5;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -119,6 +123,9 @@ int main(int ac, char** av) {
       write_video = true;
       if (arg.size()>9)
 	outputfn = arg.substr(9);
+      continue;
+    } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
+      framerate = atoi(arg.substr(6).c_str());
       continue;
     }
 
@@ -133,6 +140,11 @@ int main(int ac, char** av) {
   size_t nframe = 0; // total number of frame processed
   string window_name = "press q or esc to quit";
   namedWindow(window_name); //resizable window;
+
+  int fourcc = CV_FOURCC('m','p','4','v');
+  VideoWriter video;
+  if (write_video)
+    video.open(outputfn, fourcc, framerate, Size(1280, 640));
 
   Size src_size(640, 640);
   Size dst_size(640, 640);
@@ -183,14 +195,19 @@ int main(int ac, char** av) {
     Mat r_roi_out(newframe, Rect(640, 0, 640, 640));
     r_out2.copyTo(r_roi_out);
 
-    imshow(window_name, newframe);
-    //delay N millis, usually long enough to display and capture input
-    char key = (char)waitKey(50);
-    switch (key) {
-    case 'q':
-    case 'Q':
-    case 27: //escape key
-      return 0;
+    if (write_video)
+	video << newframe;
+    else {
+
+      imshow(window_name, newframe);
+      //delay N millis, usually long enough to display and capture input
+      char key = (char)waitKey(50);
+      switch (key) {
+      case 'q':
+      case 'Q':
+      case 27: //escape key
+        return 0;
+      }
     }
   }
 
