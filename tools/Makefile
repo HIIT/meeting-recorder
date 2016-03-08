@@ -32,7 +32,7 @@ LFLAGS = -Wall $(DEBUGFLAGS) $(COMMONFLAGS)
 
 LDFLAGS = $(OPENCVLIB) $(SVMLIB) $(SPAMSLIB)
 
-all: combine_video get_transform
+all: combine_video get_transform unfish
 
 combine_video: combine_video.o
 	$(CC) $(LFLAGS) combine_video.o -o combine_video $(LDFLAGS) $(LIBMEDIAINFOLIB) -lboost_date_time
@@ -41,8 +41,14 @@ combine_video.o: combine_video.cpp
 	$(CC) $(CFLAGS) $(LIBMEDIAINFOINC) combine_video.cpp
 
 get_transform: get_transform.o
-	$(CC) $(LFLAGS) get_transform.o -o get_transform $(LDFLAGS) $(LIBMEDIAINFOLIB) -lboost_date_time
+	$(CC) $(LFLAGS) get_transform.o -o get_transform $(LDFLAGS)
 
 get_transform.o: get_transform.cpp
-	$(CC) $(CFLAGS) $(LIBMEDIAINFOINC) get_transform.cpp
+	$(CC) $(CFLAGS) get_transform.cpp
+
+unfish: unfish.o
+	$(CC) $(LFLAGS) unfish.o -o unfish $(LDFLAGS) 
+
+unfish.o: unfish.cpp
+	$(CC) $(CFLAGS) unfish.cpp
 
