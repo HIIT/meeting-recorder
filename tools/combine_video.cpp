@@ -51,7 +51,7 @@ struct capturestruct {
   capturestruct(int _idx, time_t _start_epoch, VideoCapture _cap) : 
     idx(_idx), start_epoch(_start_epoch), status(true), 
     current_frame(0), cap(_cap), successor(0), transform(false), 
-    rotate(false) { }
+    rotate(false), special_fps(0) { }
   int idx;
   time_t start_epoch;
   bool status;
@@ -61,6 +61,7 @@ struct capturestruct {
   size_t successor;
   bool transform;
   bool rotate;
+  size_t special_fps;
 };
 
 // ----------------------------------------------------------------------
@@ -71,12 +72,13 @@ time_t calc_epoch_timestring(const string&, bool = true);
 
 void help(char** av) {
   cout << "Usage:" << endl << av[0] 
-       << " [options] idx[R|W]:videofile[:offset] [idx:videofile[:offset] ...] "
+       << " [options] idx[RWS]:videofile[:offset] [idx:videofile[:offset] ...] "
        << endl << endl
        << "Arguments:" << endl
        << "  idx       : index of video file, starting from 0," << endl
        << "              optional \"R\" is for rotating the frame" << endl
        << "              optional \"W\" is for double-width" << endl
+       << "              optional \"S\" is for slow fps i.e. 5" << endl
        << "  videofile : full path to video file" << endl
        << "  offset    : optional offset for extracted starting timestamp," << endl
        << "              the value \"C\" is for continuing from previous video"
@@ -126,6 +128,8 @@ void print_captures(vector<capturestruct> &c) {
 	 << "] successor=[" << iter->successor
 	 << "] transform=[" << iter->transform
 	 << "] rotate=[" << iter->rotate
+	 << "] rotate=[" << iter->rotate
+	 << "] special_fps=[" << iter->special_fps
 	 << "]" << endl;
   }  
 }
@@ -448,12 +452,25 @@ int main(int ac, char** av) {
     if (boost::find_first(parts[0], "R")) {
       boost::erase_first(parts[0], "R");
       rotate = true;
-    } else if (boost::find_first(parts[0], "W")) {
+    }
+    bool dw_check = false;
+    if (boost::find_first(parts[0], "W")) {
       boost::erase_first(parts[0], "W");
       doublewidth_zero = true;
+      dw_check = true;
+    }
+    size_t special_fps = 0;
+    if (boost::find_first(parts[0], "S")) {
+      boost::erase_first(parts[0], "S");
+      special_fps = 5;
     }
 
     int idx = atoi(parts[0].c_str());    
+    if (idx>0 && dw_check) {
+      cerr << "ERROR: Double-width only supported with idx==0" << endl;
+      return 1;
+    }
+
     string &fn = parts[1];
     if (idx > nidx)
       nidx = idx;
@@ -484,6 +501,9 @@ int main(int ac, char** av) {
     if (rotate)
       c.rotate = true;
     
+    if (special_fps)
+      c.special_fps = special_fps;
+
     if (continue_from_previous) {
       if (captures.size()) {
 	captures.back().successor = captures.size(); 
@@ -547,6 +567,14 @@ int main(int ac, char** av) {
 
   if (debug_printcaptures)
     print_captures(captures);
+
+  for (size_t c=0; c<captures.size(); c++) {
+    if (captures.at(c).special_fps && framerate != 25) {
+      cerr << "ERROR: special framerates only supported with default"
+	   << " global framerate" << endl;
+      return 1;
+    }
+  }
 
   Size totalsize(0,0);
   vector<Rect> capture_rects;
@@ -694,7 +722,12 @@ int main(int ac, char** av) {
 
       if (frameok)
 	cout << "Overwriting idx=" << idx << " c=" << c << endl;
-      frameok = vc.read(fr);
+
+      if (captures.at(c).special_fps == 5 && nframe%5)
+        frameok = true;
+      else
+        frameok = vc.read(fr);
+
       if (captures.at(c).rotate)
 	flip(fr, fr, -1);
 
