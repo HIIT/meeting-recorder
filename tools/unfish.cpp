@@ -31,6 +31,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 using namespace cv;
 using namespace std;
 
+#define DEFAULT_FRAMERATE 5
+#define DEFAULT_CROP_OUT 90
+#define DEFAULT_CROP_IN 0
+#define DEFAULT_FOV 170
+
 // ----------------------------------------------------------------------
 
 void help(char** av) {
@@ -39,15 +44,23 @@ void help(char** av) {
        << endl << endl
        << "Arguments:" << endl
        << "  videofile : full path to video file" << endl
-       << endl << endl
+       << endl
        << "Options:" << endl
        << "  [--todisk|--todisk=X]  : " 
        << "save output video to disk as \"output.avi\" or as \"X\"" 
        << endl
        << "  [--fps=X]              : "
-       << "set framerate to X, default is 5"
+       << "set framerate to X, default is " << DEFAULT_FRAMERATE
+       << endl
+       << "  [--crop_out=X]         : "
+       << "crop X pixels from output, default is " << DEFAULT_CROP_OUT
+       << endl
+       << "  [--crop_in=X]          : "
+       << "crop X pixels from input, default is " << DEFAULT_CROP_IN
+       << endl
+       << "  [--fov=X]              : "
+       << "set FOV to X, default is " << DEFAULT_FOV
        << endl;
-
 }
 
 // ----------------------------------------------------------------------
@@ -114,7 +127,8 @@ int main(int ac, char** av) {
   bool write_video = false, imgmode = false;
   string outputfn = "output.avi", imgfn = "";
   VideoCapture capture;
-  size_t framerate = 5, crop = 90;
+  size_t framerate = DEFAULT_FRAMERATE, crop_out = DEFAULT_CROP_OUT;
+  size_t crop_in = DEFAULT_CROP_IN, fov = DEFAULT_FOV;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -130,9 +144,14 @@ int main(int ac, char** av) {
     } else if (boost::starts_with(arg, "--imgmode")) {
       imgmode = true;
       continue;
-    } else if (boost::starts_with(arg, "--crop=") && arg.size()>7) {
-      cout << arg.substr(7) << endl;
-      crop = atoi(arg.substr(7).c_str());
+    } else if (boost::starts_with(arg, "--crop_in=") && arg.size()>10) {
+      crop_in = atoi(arg.substr(10).c_str());
+      continue;
+    } else if (boost::starts_with(arg, "--crop_out=") && arg.size()>11) {
+      crop_out = atoi(arg.substr(11).c_str());
+      continue;
+    } else if (boost::starts_with(arg, "--fov=") && arg.size()>6) {
+      fov = atoi(arg.substr(6).c_str());
       continue;
     }
 
@@ -163,13 +182,13 @@ int main(int ac, char** av) {
   if (write_video)
     video.open(outputfn, fourcc, framerate, Size(1280, 640));
 
-  Size src_size(640, 640);
+  Size src_size(640-crop_in*2, 640-crop_in*2);
   Size dst_size(640, 640);
   Mat map_x = Mat::zeros(dst_size, CV_32F);
   Mat map_y = Mat::zeros(dst_size, CV_32F);
 
   cout <<  "BUILDING MAP..." << endl;
-  buildMap(map_x, map_y, src_size, dst_size);
+  buildMap(map_x, map_y, src_size, dst_size, fov, fov);
   cout <<  "MAP DONE"<< endl;
 
   for (;; nframe++) {
@@ -184,7 +203,7 @@ int main(int ac, char** av) {
 
     Mat newframe = Mat::zeros(Size(1280, 640), CV_8UC3);
 
-    Mat l_roi_in(frame, Rect(0, 0, 640, 640));
+    Mat l_roi_in(frame, Rect(crop_in, crop_in, 640-crop_in*2, 640-crop_in*2));
     Mat l_out = Mat::zeros(Size(640, 640), CV_8UC3);
 
     transpose(l_roi_in, l_roi_in);
@@ -192,14 +211,14 @@ int main(int ac, char** av) {
     
     remap(l_roi_in, l_out, map_x, map_y, CV_INTER_LINEAR);
 
-    Mat l_out_crop(l_out, Rect(crop, crop, 640-crop*2, 640-crop*2));
+    Mat l_out_crop(l_out, Rect(crop_out, crop_out, 640-crop_out*2, 640-crop_out*2));
     Mat l_out2;
     resize(l_out_crop, l_out2, Size(640,640));
 
     Mat l_roi_out(newframe, Rect(0, 0, 640, 640));
     l_out2.copyTo(l_roi_out);
 
-    Mat r_roi_in(frame, Rect(640, 0, 640, 640));
+    Mat r_roi_in(frame, Rect(640+crop_in, crop_in, 640-crop_in*2, 640-crop_in*2));
     Mat r_out = Mat::zeros(Size(640, 640), CV_8UC3);
 
     transpose(r_roi_in, r_roi_in);
@@ -207,7 +226,7 @@ int main(int ac, char** av) {
     
     remap(r_roi_in, r_out, map_x, map_y, CV_INTER_LINEAR);
 
-    Mat r_out_crop(r_out, Rect(crop, crop, 640-crop*2, 640-crop*2));
+    Mat r_out_crop(r_out, Rect(crop_out, crop_out, 640-crop_out*2, 640-crop_out*2));
     Mat r_out2;
     resize(r_out_crop, r_out2, Size(640,640));
 
