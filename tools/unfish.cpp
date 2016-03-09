@@ -111,10 +111,10 @@ int main(int ac, char** av) {
     return 1;
   }
 
-  bool write_video = false;
-  string outputfn = "output.avi";
+  bool write_video = false, imgmode = false;
+  string outputfn = "output.avi", imgfn = "";
   VideoCapture capture;
-  size_t framerate = 5;
+  size_t framerate = 5, crop = 90;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -127,18 +127,35 @@ int main(int ac, char** av) {
     } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
       framerate = atoi(arg.substr(6).c_str());
       continue;
+    } else if (boost::starts_with(arg, "--imgmode")) {
+      imgmode = true;
+      continue;
+    } else if (boost::starts_with(arg, "--crop=") && arg.size()>7) {
+      cout << arg.substr(7) << endl;
+      crop = atoi(arg.substr(7).c_str());
+      continue;
     }
 
-    capture.open(arg);
-    if (!capture.isOpened()) {
-      cerr << "ERROR: Failed to open a video file [" << arg << "]" << endl;
-      return 1;
+    if (imgmode) {
+      imgfn = arg;
+    }  else {
+      capture.open(arg);
+      if (!capture.isOpened()) {
+        cerr << "ERROR: Failed to open a video file [" << arg << "]" << endl;
+        return 1;
+      }
     }
     break;
   }
 
+  if (imgmode && write_video) {
+    cerr << "ERROR: --todisk and --imgmode cannot be used at the same time" 
+         << endl;
+    return 1;
+  }
+
   size_t nframe = 0; // total number of frame processed
-  string window_name = "press q or esc to quit";
+  string window_name = "press q or esc to quit | s to save image";
   namedWindow(window_name); //resizable window;
 
   int fourcc = CV_FOURCC('m','p','4','v');
@@ -157,7 +174,11 @@ int main(int ac, char** av) {
 
   for (;; nframe++) {
     Mat frame;
-    bool frameok = capture.read(frame);
+    bool frameok = true;
+    if (imgmode)
+      frame = imread(imgfn);
+    else 
+      frameok = capture.read(frame);
     if (!frameok)
       return 0;
 
@@ -170,8 +191,6 @@ int main(int ac, char** av) {
     flip(l_roi_in, l_roi_in, 1);
     
     remap(l_roi_in, l_out, map_x, map_y, CV_INTER_LINEAR);
-
-    int crop = 90;
 
     Mat l_out_crop(l_out, Rect(crop, crop, 640-crop*2, 640-crop*2));
     Mat l_out2;
@@ -201,12 +220,20 @@ int main(int ac, char** av) {
 
       imshow(window_name, newframe);
       //delay N millis, usually long enough to display and capture input
-      char key = (char)waitKey(50);
+      char key = (char)waitKey(imgmode?0:50);
       switch (key) {
       case 'q':
       case 'Q':
       case 27: //escape key
         return 0;
+      case 's':
+      case 'S': {
+	stringstream ss;
+	ss << "unfish-output.jpg";
+	cout << "Saved output image: " << ss.str() << endl;
+	imwrite(ss.str(), newframe);
+      }
+
       }
     }
   }
