@@ -32,7 +32,8 @@ using namespace cv;
 using namespace std;
 
 #define DEFAULT_FRAMERATE 5
-#define DEFAULT_CROP_OUT 90
+#define DEFAULT_METHOD 2
+#define DEFAULT_CROP_OUT 40
 #define DEFAULT_CROP_IN 0
 #define DEFAULT_FOV 170
 
@@ -52,6 +53,9 @@ void help(char** av) {
        << "  [--fps=X]              : "
        << "set framerate to X, default is " << DEFAULT_FRAMERATE
        << endl
+       << "  [--method=X]           : "
+       << "method to use, default is " << DEFAULT_METHOD
+       << endl
        << "  [--crop_out=X]         : "
        << "crop X pixels from output, default is " << DEFAULT_CROP_OUT
        << endl
@@ -59,11 +63,14 @@ void help(char** av) {
        << "crop X pixels from input, default is " << DEFAULT_CROP_IN
        << endl
        << "  [--fov=X]              : "
-       << "set FOV to X, default is " << DEFAULT_FOV
+       << "set FOV to X, default is " << DEFAULT_FOV << " (only method 1)"
        << endl;
 }
 
 // ----------------------------------------------------------------------
+// Method 1, adapted from:
+// https://github.com/kscottz/dewarp/blob/master/fisheye/defish.py
+
 
 void buildMap(Mat &map_x, Mat &map_y, Size src_size, Size dst_size, 
               double hfovd=170.0, double vfovd=170.0) {
@@ -106,14 +113,42 @@ void buildMap(Mat &map_x, Mat &map_y, Size src_size, Size dst_size,
 }
 
 // ----------------------------------------------------------------------
+// Method 2, adapted from: http://paulbourke.net/dome/fish2/
 
-/*
-void unwarp(Mat &img, Mat &output, const Mat &xmap, const Mat &ymap) {
-  // apply the unwarping map to our image
-  output = remap(img, xmap, ymap);
+void fish2sphere(Mat &map_x, Mat &map_y, Size src_size, Size dst_size) {
+
+  Point2f pfish;
+  float theta,phi,r;
+  Point3f psph;
+
+  float FOV = 3.141592654; // FOV of the fisheye, eg: 180 degrees
+  float width = src_size.width;
+  float height = src_size.height;
+
+  for (int y=0; y<dst_size.height; y++)
+    for (int x=0; x<dst_size.width; x++) {
+
+      // Polar angles
+      theta = 3.14159265 * (x / width - 0.5); // -pi/2 to pi/2
+      phi = 3.14159265 * (y / height - 0.5);	// -pi/2 to pi/2
+
+      // Vector in 3D space
+      psph.x = cos(phi) * sin(theta);
+      psph.y = cos(phi) * cos(theta);
+      psph.z = sin(phi);
+
+      // Calculate fisheye angle and radius
+      theta = atan2(psph.z,psph.x);
+      phi = atan2(sqrt(psph.x*psph.x+psph.z*psph.z),psph.y);
+      r = width * phi / FOV;
+
+      // Pixel in fisheye space
+      map_x.at<float>(y,x) = floor(0.5 * width + r * cos(theta) + 0.5);
+      map_y.at<float>(y,x) = floor(0.5 * width + r * sin(theta) + 0.5);
+    }
+
   return;
 }
-*/
 
 // ----------------------------------------------------------------------
 
@@ -127,8 +162,9 @@ int main(int ac, char** av) {
   bool write_video = false, imgmode = false;
   string outputfn = "output.avi", imgfn = "";
   VideoCapture capture;
-  size_t framerate = DEFAULT_FRAMERATE, crop_out = DEFAULT_CROP_OUT;
-  size_t crop_in = DEFAULT_CROP_IN, fov = DEFAULT_FOV;
+  size_t framerate = DEFAULT_FRAMERATE, method = DEFAULT_METHOD;
+  size_t crop_out = DEFAULT_CROP_OUT, crop_in = DEFAULT_CROP_IN;
+  size_t fov = DEFAULT_FOV;
 
   for (int i=1; i<ac; i++) {
     string arg(av[i]);
@@ -140,6 +176,9 @@ int main(int ac, char** av) {
       continue;
     } else if (boost::starts_with(arg, "--fps=") && arg.size()>6) {
       framerate = atoi(arg.substr(6).c_str());
+      continue;
+    } else if (boost::starts_with(arg, "--method=") && arg.size()>9) {
+      method = atoi(arg.substr(9).c_str());
       continue;
     } else if (boost::starts_with(arg, "--imgmode")) {
       imgmode = true;
@@ -187,9 +226,20 @@ int main(int ac, char** av) {
   Mat map_x = Mat::zeros(dst_size, CV_32F);
   Mat map_y = Mat::zeros(dst_size, CV_32F);
 
-  cout <<  "BUILDING MAP..." << endl;
-  buildMap(map_x, map_y, src_size, dst_size, fov, fov);
-  cout <<  "MAP DONE"<< endl;
+  cout << "Building map using method " << method << endl;
+  switch (method) {
+  case 1:
+    buildMap(map_x, map_y, src_size, dst_size, fov, fov);
+    break;
+  case 2:
+    fish2sphere(map_x, map_y, src_size, dst_size);
+    break;
+  default:
+    cerr << "ERROR: unsupported method: " << method
+         << endl;
+    return 1;
+  }
+  cout << "Map done" << endl;
 
   for (;; nframe++) {
     Mat frame;
