@@ -128,7 +128,6 @@ void print_captures(vector<capturestruct> &c) {
 	 << "] successor=[" << iter->successor
 	 << "] transform=[" << iter->transform
 	 << "] rotate=[" << iter->rotate
-	 << "] rotate=[" << iter->rotate
 	 << "] special_fps=[" << iter->special_fps
 	 << "]" << endl;
   }  
