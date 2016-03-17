@@ -617,10 +617,17 @@ int main(int ac, char** av) {
       }
       break;
     case (3):
-      totalsize = Size(640*3,360*2);
-      capture_rects.push_back(Rect(640,0,640*2,360*2));
-      capture_rects.push_back(Rect(0,0,640,360));
-      capture_rects.push_back(Rect(0,360,640,360));
+      if (!doublewidth_zero) {
+        totalsize = Size(640*3,360*2);
+        capture_rects.push_back(Rect(640,0,640*2,360*2));
+        capture_rects.push_back(Rect(0,0,640,360));
+        capture_rects.push_back(Rect(0,360,640,360));
+      } else {
+        totalsize = Size(640*2,360*2);
+        capture_rects.push_back(Rect(0,0,640*2,360));
+        capture_rects.push_back(Rect(0,360,640,360));
+        capture_rects.push_back(Rect(640,360,640,360));
+      }
       break;
     case (4):
       initialize_output(2, 2, totalsize, capture_rects);
