@@ -39,7 +39,7 @@
 ****************************************************************************/
 
 /*
-  Copyright (c) 2015 University of Helsinki
+  Copyright (c) 2015-2016 University of Helsinki
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation files
@@ -212,9 +212,17 @@ void AvRecorder::updateProgress(qint64 duration)
     QFileInfo ca1File(dirName+"/capture0.avi");
     QFileInfo ca2File(dirName+"/capture1.avi");
 
-    ui->statusbar->showMessage(tr("Rec started %1 (%2 secs), audio %3 MB, camera 0: %4 MB, camera 1: %5 MB")
+    qint64 duration_human = duration / 1000;
+    QString duration_unit = "secs";
+    if (duration_human > 100) {
+        duration_human /= 60;
+        duration_unit = "mins";
+    }
+
+    ui->statusbar->showMessage(tr("Rec started %1 (%2 %3), audio %4 MB, camera 0: %5 MB, camera 1: %6 MB")
                                .arg(rec_started.toString("hh:mm:ss"))
-                               .arg(duration / 1000)
+                               .arg(duration_human)
+                               .arg(duration_unit)
                                .arg(wavFile.size()/1024/1024)
                                .arg(ca1File.size()/1024/1024)
                                .arg(ca2File.size()/1024/1024));
