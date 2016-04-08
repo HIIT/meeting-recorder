@@ -79,6 +79,21 @@ void transform_image(Mat &src, const vector<Point2f> &pp) {
 
 // ----------------------------------------------------------------------
 
+void load_transform(Mat &src) {
+  FileStorage fs;
+  Mat M;
+  string transfn = "transform.yml";
+  fs.open(transfn, FileStorage::READ);
+  if (!fs.isOpened()) {
+    cerr << "ERROR: failed to open " << transfn << endl;
+    return;
+  }
+  fs["M"] >> M;
+  warpPerspective(src, src, M, Size(src.cols, src.rows));
+}
+
+// ----------------------------------------------------------------------
+
 int main(int ac, char** av) {
 
   if (ac <= 1) {
@@ -168,6 +183,14 @@ int main(int ac, char** av) {
       resize(frame, smallframe, Size(640*2, 360*2));
       imshow("Select corners", smallframe);
       waitKey(0);
+    case 'l':
+    case 'L':
+      if (!read_frames) {
+        load_transform(frame);
+        resize(frame, smallframe, Size(640*2, 360*2));
+        imshow("Select corners", smallframe);
+        waitKey(0);
+      }
     }
 
   }
