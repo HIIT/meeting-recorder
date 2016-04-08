@@ -1,5 +1,5 @@
 /*
-  Copyright (c) 2015 University of Helsinki
+  Copyright (c) 2015-2016 University of Helsinki
 
   Permission is hereby granted, free of charge, to any person
   obtaining a copy of this software and associated documentation files
@@ -71,7 +71,9 @@ void CameraThread::setDefaultDesiredInputSize() {
 
 // ---------------------------------------------------------------------
 
+// Q_DECL_OVERRIDE produces an error on OS X 10.11 / Qt 5.6: 
 void CameraThread::run() Q_DECL_OVERRIDE {
+
     QString result;
 
     time_duration td, td1, td2;
@@ -136,6 +138,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
     is_active = true;
 
     double avgload = 0.0;
+    size_t nframe = 0;
     for (;;) {
 
       if (stopLoop) {
@@ -153,6 +156,7 @@ void CameraThread::run() Q_DECL_OVERRIDE {
       Mat frame;
       
       capture >> frame;
+      nframe++;
       
       if (is_active) {
 	  was_active = true;
@@ -175,8 +179,11 @@ void CameraThread::run() Q_DECL_OVERRIDE {
 
 	      Mat window;
 	      resize(frame, window, window_size);
+	      putText(window, QString::number(nframe).toStdString().c_str(),
+		      Point(10, 20), FONT_HERSHEY_PLAIN, 1.5,
+		      Scalar(0,0,255), 2);
 	      putText(window, QString::number(avgload, 'f', 2).toStdString().c_str(),
-		      Point(window.cols-60,20), FONT_HERSHEY_PLAIN, 1.5,
+		      Point(window.cols-60, 20), FONT_HERSHEY_PLAIN, 1.5,
 		      Scalar(0,0,255), 2);
 	      if (avgload>1.0)
 		  putText(window, "CPU OVERLOAD",
