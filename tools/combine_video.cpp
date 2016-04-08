@@ -630,7 +630,15 @@ int main(int ac, char** av) {
       }
       break;
     case (4):
-      initialize_output(2, 2, totalsize, capture_rects);
+      if (!doublewidth_zero) {
+        initialize_output(2, 2, totalsize, capture_rects);
+      } else {
+        totalsize = Size(640*2,360*3);
+        capture_rects.push_back(Rect(0,0,640*2,360));
+        capture_rects.push_back(Rect(0,360,640,360));
+        capture_rects.push_back(Rect(640,360,640,360));
+        capture_rects.push_back(Rect(0,360*2,640,360));
+      }
       break;
     case (5):
     case (6):
