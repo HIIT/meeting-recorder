@@ -23,6 +23,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
+Files avrecorder.*, qaudiolevel.*, and main.cpp are based on original work 
+by Digia Plc, licensed under 3-clause BSD.
+
 /****************************************************************************
 **
 ** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
